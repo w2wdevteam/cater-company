@@ -5,7 +5,7 @@ import PageHeader from '@/components/common/PageHeader'
 import ExportButtons from '@/components/common/ExportButtons'
 import ErrorBanner from '@/components/common/ErrorBanner'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { cn, formatCurrency } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { getDailyReport, getDailyReportByMenu, getDailyReportByLocation } from '@/services/reports.service'
@@ -122,7 +122,7 @@ export default function DailyReportPage() {
       ) : view === 'department' ? (
         <DepartmentView data={deptQuery.data ?? []} expanded={expanded} onToggle={toggleExpand} />
       ) : view === 'menu' ? (
-        <MenuView data={menuQuery.data ?? []} expanded={expanded} onToggle={toggleExpand} />
+        <MenuView data={menuQuery.data ?? []} />
       ) : (
         <LocationView data={locQuery.data ?? []} expanded={expanded} onToggle={toggleExpand} />
       )}
@@ -137,7 +137,7 @@ function LoadingSkeleton() {
         <tbody>
           {Array.from({ length: 4 }).map((_, i) => (
             <tr key={i} className="border-b">
-              <td colSpan={4} className="px-4 py-3">
+              <td colSpan={3} className="px-4 py-3">
                 <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200" />
               </td>
             </tr>
@@ -162,7 +162,6 @@ function DepartmentView({
   onToggle: (key: string) => void
 }) {
   const totalOrders = data.reduce((s, d) => s + d.orderCount, 0)
-  const totalCost = data.reduce((s, d) => s + d.costTotal, 0)
 
   return (
     <div className="overflow-hidden rounded-md border">
@@ -172,7 +171,6 @@ function DepartmentView({
             <th className="w-10 px-4 py-2.5" />
             <th className="px-4 py-2.5 text-left font-medium text-gray-600">Department</th>
             <th className="px-4 py-2.5 text-right font-medium text-gray-600">Orders</th>
-            <th className="px-4 py-2.5 text-right font-medium text-gray-600">Total Cost</th>
           </tr>
         </thead>
         <tbody>
@@ -186,7 +184,6 @@ function DepartmentView({
             <td className="px-4 py-2.5" />
             <td className="px-4 py-2.5 text-gray-900">Total</td>
             <td className="px-4 py-2.5 text-right text-gray-900">{totalOrders}</td>
-            <td className="px-4 py-2.5 text-right text-gray-900">{formatCurrency(totalCost)}</td>
           </tr>
         </tbody>
       </table>
@@ -201,93 +198,44 @@ function DeptRows({ dept, isOpen, onToggle }: { dept: DailyReportDepartment; isO
         <td className="px-4 py-2.5 text-gray-400"><ExpandIcon open={isOpen} /></td>
         <td className="px-4 py-2.5 font-medium text-gray-900">{dept.departmentName}</td>
         <td className="px-4 py-2.5 text-right text-gray-700">{dept.orderCount}</td>
-        <td className="px-4 py-2.5 text-right text-gray-700">{formatCurrency(dept.costTotal)}</td>
       </tr>
-      {isOpen && dept.employees.map((emp, i) => (
-        <tr key={i} className={cn('border-b bg-gray-50/50', emp.notDelivered && 'text-gray-400')}>
+      {isOpen && dept.menuItems.map((item) => (
+        <tr key={item.menuItemName} className="border-b bg-gray-100">
           <td className="px-4 py-2" />
-          <td className="px-4 py-2 pl-10">
-            {emp.employeeName}
-            <span className="mx-2 text-gray-300">·</span>
-            <span className="text-gray-500">{emp.menuItemName}</span>
-            {emp.notDelivered && <span className="ml-2 text-xs text-red-400">(not delivered)</span>}
-          </td>
-          <td className="px-4 py-2 text-right" />
-          <td className={cn('px-4 py-2 text-right', emp.notDelivered && 'line-through')}>{formatCurrency(emp.cost)}</td>
+          <td className="px-4 py-2 pl-10 text-gray-700">{item.menuItemName}</td>
+          <td className="px-4 py-2 text-right text-gray-600">{item.orderCount}</td>
         </tr>
       ))}
     </>
   )
 }
 
-function MenuView({
-  data,
-  expanded,
-  onToggle,
-}: {
-  data: DailyReportMenuGroup[]
-  expanded: Set<string>
-  onToggle: (key: string) => void
-}) {
+function MenuView({ data }: { data: DailyReportMenuGroup[] }) {
   const totalOrders = data.reduce((s, d) => s + d.orderCount, 0)
-  const totalCost = data.reduce((s, d) => s + d.costTotal, 0)
 
   return (
     <div className="overflow-hidden rounded-md border">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b bg-gray-50">
-            <th className="w-10 px-4 py-2.5" />
             <th className="px-4 py-2.5 text-left font-medium text-gray-600">Menu Item</th>
-            <th className="px-4 py-2.5 text-right font-medium text-gray-600">Price</th>
             <th className="px-4 py-2.5 text-right font-medium text-gray-600">Orders</th>
-            <th className="px-4 py-2.5 text-right font-medium text-gray-600">Total Cost</th>
           </tr>
         </thead>
         <tbody>
-          {data.map((item) => {
-            const isOpen = expanded.has(item.menuItemName)
-            return (
-              <MenuRows key={item.menuItemName} item={item} isOpen={isOpen} onToggle={() => onToggle(item.menuItemName)} />
-            )
-          })}
+          {data.map((item) => (
+            <tr key={item.menuItemName} className="border-b">
+              <td className="px-4 py-2.5 font-medium text-gray-900">{item.menuItemName}</td>
+              <td className="px-4 py-2.5 text-right text-gray-700">{item.orderCount}</td>
+            </tr>
+          ))}
           <tr className="border-t-2 bg-gray-50 font-semibold">
-            <td className="px-4 py-2.5" />
             <td className="px-4 py-2.5 text-gray-900">Total</td>
-            <td className="px-4 py-2.5" />
             <td className="px-4 py-2.5 text-right text-gray-900">{totalOrders}</td>
-            <td className="px-4 py-2.5 text-right text-gray-900">{formatCurrency(totalCost)}</td>
           </tr>
         </tbody>
       </table>
     </div>
-  )
-}
-
-function MenuRows({ item, isOpen, onToggle }: { item: DailyReportMenuGroup; isOpen: boolean; onToggle: () => void }) {
-  return (
-    <>
-      <tr className="border-b cursor-pointer hover:bg-gray-50" onClick={onToggle}>
-        <td className="px-4 py-2.5 text-gray-400"><ExpandIcon open={isOpen} /></td>
-        <td className="px-4 py-2.5 font-medium text-gray-900">{item.menuItemName}</td>
-        <td className="px-4 py-2.5 text-right text-gray-500">{formatCurrency(item.price)}</td>
-        <td className="px-4 py-2.5 text-right text-gray-700">{item.orderCount}</td>
-        <td className="px-4 py-2.5 text-right text-gray-700">{formatCurrency(item.costTotal)}</td>
-      </tr>
-      {isOpen && item.employees.map((emp, i) => (
-        <tr key={i} className={cn('border-b bg-gray-50/50', emp.notDelivered && 'text-gray-400')}>
-          <td className="px-4 py-2" />
-          <td className="px-4 py-2 pl-10" colSpan={2}>
-            {emp.employeeName}
-            <span className="mx-2 text-gray-300">·</span>
-            <span className="text-gray-500">{emp.departmentName}</span>
-            {emp.notDelivered && <span className="ml-2 text-xs text-red-400">(not delivered)</span>}
-          </td>
-          <td className="px-4 py-2" />
-          <td className="px-4 py-2" />
-        </tr>
-      ))}
-    </>
   )
 }
 
@@ -301,7 +249,6 @@ function LocationView({
   onToggle: (key: string) => void
 }) {
   const totalOrders = data.reduce((s, g) => s + g.orderCount, 0)
-  const totalCost = data.reduce((s, g) => s + g.costTotal, 0)
 
   return (
     <div className="overflow-hidden rounded-md border">
@@ -309,23 +256,21 @@ function LocationView({
         <thead>
           <tr className="border-b bg-gray-50">
             <th className="w-10 px-4 py-2.5" />
-            <th className="px-4 py-2.5 text-left font-medium text-gray-600">Location / Department</th>
+            <th className="px-4 py-2.5 text-left font-medium text-gray-600">Location</th>
             <th className="px-4 py-2.5 text-right font-medium text-gray-600">Orders</th>
-            <th className="px-4 py-2.5 text-right font-medium text-gray-600">Total Cost</th>
           </tr>
         </thead>
         <tbody>
           {data.map((loc) => {
             const isOpen = expanded.has(loc.locationName)
             return (
-              <LocationRows key={loc.locationName} loc={loc} isOpen={isOpen} onToggle={onToggle} expanded={expanded} />
+              <LocationRows key={loc.locationName} loc={loc} isOpen={isOpen} onToggle={() => onToggle(loc.locationName)} />
             )
           })}
           <tr className="border-t-2 bg-gray-50 font-semibold">
             <td className="px-4 py-2.5" />
             <td className="px-4 py-2.5 text-gray-900">Total</td>
             <td className="px-4 py-2.5 text-right text-gray-900">{totalOrders}</td>
-            <td className="px-4 py-2.5 text-right text-gray-900">{formatCurrency(totalCost)}</td>
           </tr>
         </tbody>
       </table>
@@ -333,20 +278,10 @@ function LocationView({
   )
 }
 
-function LocationRows({
-  loc,
-  isOpen,
-  onToggle,
-  expanded,
-}: {
-  loc: DailyReportLocationGroup
-  isOpen: boolean
-  onToggle: (key: string) => void
-  expanded: Set<string>
-}) {
+function LocationRows({ loc, isOpen, onToggle }: { loc: DailyReportLocationGroup; isOpen: boolean; onToggle: () => void }) {
   return (
     <>
-      <tr className="border-b cursor-pointer hover:bg-gray-50" onClick={() => onToggle(loc.locationName)}>
+      <tr className="border-b cursor-pointer hover:bg-gray-50" onClick={onToggle}>
         <td className="px-4 py-2.5 text-gray-400"><ExpandIcon open={isOpen} /></td>
         <td className="px-4 py-2.5 font-medium text-gray-900">
           <span className="inline-flex items-center gap-1.5">
@@ -355,49 +290,12 @@ function LocationRows({
           </span>
         </td>
         <td className="px-4 py-2.5 text-right text-gray-700">{loc.orderCount}</td>
-        <td className="px-4 py-2.5 text-right text-gray-700">{formatCurrency(loc.costTotal)}</td>
       </tr>
-      {isOpen && loc.departments.map((dept) => {
-        const deptKey = `${loc.locationName}::${dept.departmentName}`
-        const deptOpen = expanded.has(deptKey)
-        return (
-          <DeptInLocationRows key={deptKey} dept={dept} deptKey={deptKey} isOpen={deptOpen} onToggle={onToggle} />
-        )
-      })}
-    </>
-  )
-}
-
-function DeptInLocationRows({
-  dept,
-  deptKey,
-  isOpen,
-  onToggle,
-}: {
-  dept: DailyReportLocationGroup['departments'][number]
-  deptKey: string
-  isOpen: boolean
-  onToggle: (key: string) => void
-}) {
-  return (
-    <>
-      <tr className="border-b cursor-pointer bg-gray-50/50 hover:bg-gray-100/50" onClick={() => onToggle(deptKey)}>
-        <td className="px-4 py-2 pl-8 text-gray-400"><ExpandIcon open={isOpen} /></td>
-        <td className="px-4 py-2 pl-12 font-medium text-gray-700">{dept.departmentName}</td>
-        <td className="px-4 py-2 text-right text-gray-600">{dept.orderCount}</td>
-        <td className="px-4 py-2 text-right text-gray-600">{formatCurrency(dept.costTotal)}</td>
-      </tr>
-      {isOpen && dept.employees.map((emp, i) => (
-        <tr key={i} className={cn('border-b bg-gray-50/30', emp.notDelivered && 'text-gray-400')}>
-          <td className="px-4 py-1.5" />
-          <td className="px-4 py-1.5 pl-20">
-            {emp.employeeName}
-            <span className="mx-2 text-gray-300">·</span>
-            <span className="text-gray-500">{emp.menuItemName}</span>
-            {emp.notDelivered && <span className="ml-2 text-xs text-red-400">(not delivered)</span>}
-          </td>
-          <td className="px-4 py-1.5" />
-          <td className={cn('px-4 py-1.5 text-right', emp.notDelivered && 'line-through')}>{formatCurrency(emp.cost)}</td>
+      {isOpen && loc.menuItems.map((item) => (
+        <tr key={item.menuItemName} className="border-b bg-gray-100">
+          <td className="px-4 py-2" />
+          <td className="px-4 py-2 pl-10 text-gray-700">{item.menuItemName}</td>
+          <td className="px-4 py-2 text-right text-gray-600">{item.orderCount}</td>
         </tr>
       ))}
     </>

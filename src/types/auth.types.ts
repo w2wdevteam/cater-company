@@ -1,6 +1,6 @@
 export interface User {
   id: string
-  email: string
+  phone: string
   name: string
   role: 'company-admin'
   companyId: string
@@ -8,7 +8,7 @@ export interface User {
 }
 
 export interface LoginCredentials {
-  email: string
+  phone: string
   password: string
 }
 

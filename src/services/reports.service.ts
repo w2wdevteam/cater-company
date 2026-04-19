@@ -10,6 +10,7 @@ import type {
   CancellationRow,
 } from '@/types/report.types'
 
+
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -25,31 +26,28 @@ export async function getDailyReport(_params?: {
     {
       departmentName: 'Engineering',
       orderCount: 15,
-      costTotal: 480000,
-      employees: [
-        { employeeName: 'John Smith', menuItemName: 'Grilled Chicken Bowl', cost: 32000, notDelivered: false },
-        { employeeName: 'Mike Chen', menuItemName: 'Beef Stroganoff', cost: 38000, notDelivered: false },
-        { employeeName: 'Tom Wilson', menuItemName: 'Caesar Salad', cost: 25000, notDelivered: true },
-        { employeeName: 'Lisa Wang', menuItemName: 'Pasta Primavera', cost: 30000, notDelivered: false },
+      menuItems: [
+        { menuItemName: 'Grilled Chicken Bowl', orderCount: 5 },
+        { menuItemName: 'Beef Stroganoff', orderCount: 4 },
+        { menuItemName: 'Caesar Salad', orderCount: 3 },
+        { menuItemName: 'Pasta Primavera', orderCount: 3 },
       ],
     },
     {
       departmentName: 'Marketing',
       orderCount: 10,
-      costTotal: 260000,
-      employees: [
-        { employeeName: 'Sarah Johnson', menuItemName: 'Caesar Salad', cost: 25000, notDelivered: false },
-        { employeeName: 'Jessica Lee', menuItemName: 'Veggie Wrap', cost: 24000, notDelivered: false },
-        { employeeName: 'Emily Davis', menuItemName: 'Pasta Primavera', cost: 30000, notDelivered: true },
+      menuItems: [
+        { menuItemName: 'Caesar Salad', orderCount: 4 },
+        { menuItemName: 'Veggie Wrap', orderCount: 3 },
+        { menuItemName: 'Pasta Primavera', orderCount: 3 },
       ],
     },
     {
       departmentName: 'Sales',
       orderCount: 8,
-      costTotal: 210000,
-      employees: [
-        { employeeName: 'Alex Turner', menuItemName: 'Fish & Chips', cost: 35000, notDelivered: false },
-        { employeeName: 'David Brown', menuItemName: 'Grilled Chicken Bowl', cost: 32000, notDelivered: false },
+      menuItems: [
+        { menuItemName: 'Fish & Chips', orderCount: 4 },
+        { menuItemName: 'Grilled Chicken Bowl', orderCount: 4 },
       ],
     },
   ]
@@ -123,11 +121,46 @@ export async function getMonthlyReport(_params?: {
 }): Promise<MonthlyReportRow[]> {
   await delay(600)
   return [
-    { employeeName: 'John Smith', departmentName: 'Engineering', orderCount: 18, menuBreakdown: 'Chicken Bowl ×6, Beef Stroganoff ×5, Caesar Salad ×4, Fish & Chips ×3', totalCost: 585000 },
-    { employeeName: 'Mike Chen', departmentName: 'Engineering', orderCount: 16, menuBreakdown: 'Beef Stroganoff ×7, Chicken Bowl ×5, Veggie Wrap ×4', totalCost: 522000 },
-    { employeeName: 'Sarah Johnson', departmentName: 'Marketing', orderCount: 14, menuBreakdown: 'Caesar Salad ×6, Veggie Wrap ×5, Pasta Primavera ×3', totalCost: 360000 },
-    { employeeName: 'Alex Turner', departmentName: 'Sales', orderCount: 15, menuBreakdown: 'Fish & Chips ×6, Chicken Bowl ×5, Pasta Primavera ×4', totalCost: 490000 },
-    { employeeName: 'David Brown', departmentName: 'Sales', orderCount: 12, menuBreakdown: 'Chicken Bowl ×8, Beef Stroganoff ×4', totalCost: 408000 },
+    {
+      employeeName: 'John Smith', departmentName: 'Engineering', orderCount: 18, totalCost: 585000,
+      menuItems: [
+        { menuItemName: 'Chicken Bowl', orderCount: 6 },
+        { menuItemName: 'Beef Stroganoff', orderCount: 5 },
+        { menuItemName: 'Caesar Salad', orderCount: 4 },
+        { menuItemName: 'Fish & Chips', orderCount: 3 },
+      ],
+    },
+    {
+      employeeName: 'Mike Chen', departmentName: 'Engineering', orderCount: 16, totalCost: 522000,
+      menuItems: [
+        { menuItemName: 'Beef Stroganoff', orderCount: 7 },
+        { menuItemName: 'Chicken Bowl', orderCount: 5 },
+        { menuItemName: 'Veggie Wrap', orderCount: 4 },
+      ],
+    },
+    {
+      employeeName: 'Sarah Johnson', departmentName: 'Marketing', orderCount: 14, totalCost: 360000,
+      menuItems: [
+        { menuItemName: 'Caesar Salad', orderCount: 6 },
+        { menuItemName: 'Veggie Wrap', orderCount: 5 },
+        { menuItemName: 'Pasta Primavera', orderCount: 3 },
+      ],
+    },
+    {
+      employeeName: 'Alex Turner', departmentName: 'Sales', orderCount: 15, totalCost: 490000,
+      menuItems: [
+        { menuItemName: 'Fish & Chips', orderCount: 6 },
+        { menuItemName: 'Chicken Bowl', orderCount: 5 },
+        { menuItemName: 'Pasta Primavera', orderCount: 4 },
+      ],
+    },
+    {
+      employeeName: 'David Brown', departmentName: 'Sales', orderCount: 12, totalCost: 408000,
+      menuItems: [
+        { menuItemName: 'Chicken Bowl', orderCount: 8 },
+        { menuItemName: 'Beef Stroganoff', orderCount: 4 },
+      ],
+    },
   ]
 }
 
@@ -196,66 +229,12 @@ export async function getDailyReportByMenu(_params?: {
 }): Promise<DailyReportMenuGroup[]> {
   await delay(600)
   return [
-    {
-      menuItemName: 'Grilled Chicken Bowl',
-      price: 32000,
-      orderCount: 8,
-      costTotal: 256000,
-      employees: [
-        { employeeName: 'John Smith', departmentName: 'Engineering', notDelivered: false },
-        { employeeName: 'David Brown', departmentName: 'Sales', notDelivered: false },
-        { employeeName: 'Rachel Kim', departmentName: 'HR', notDelivered: false },
-      ],
-    },
-    {
-      menuItemName: 'Caesar Salad',
-      price: 25000,
-      orderCount: 6,
-      costTotal: 150000,
-      employees: [
-        { employeeName: 'Sarah Johnson', departmentName: 'Marketing', notDelivered: false },
-        { employeeName: 'Tom Wilson', departmentName: 'Engineering', notDelivered: true },
-      ],
-    },
-    {
-      menuItemName: 'Beef Stroganoff',
-      price: 38000,
-      orderCount: 5,
-      costTotal: 190000,
-      employees: [
-        { employeeName: 'Mike Chen', departmentName: 'Engineering', notDelivered: false },
-        { employeeName: 'Alex Turner', departmentName: 'Sales', notDelivered: false },
-      ],
-    },
-    {
-      menuItemName: 'Pasta Primavera',
-      price: 30000,
-      orderCount: 4,
-      costTotal: 120000,
-      employees: [
-        { employeeName: 'Lisa Wang', departmentName: 'Engineering', notDelivered: false },
-        { employeeName: 'Emily Davis', departmentName: 'Marketing', notDelivered: true },
-      ],
-    },
-    {
-      menuItemName: 'Fish & Chips',
-      price: 35000,
-      orderCount: 5,
-      costTotal: 175000,
-      employees: [
-        { employeeName: 'Alex Turner', departmentName: 'Sales', notDelivered: false },
-        { employeeName: 'David Brown', departmentName: 'Sales', notDelivered: false },
-      ],
-    },
-    {
-      menuItemName: 'Veggie Wrap',
-      price: 24000,
-      orderCount: 5,
-      costTotal: 120000,
-      employees: [
-        { employeeName: 'Jessica Lee', departmentName: 'Marketing', notDelivered: false },
-      ],
-    },
+    { menuItemName: 'Grilled Chicken Bowl', orderCount: 8 },
+    { menuItemName: 'Caesar Salad', orderCount: 6 },
+    { menuItemName: 'Beef Stroganoff', orderCount: 5 },
+    { menuItemName: 'Pasta Primavera', orderCount: 4 },
+    { menuItemName: 'Fish & Chips', orderCount: 5 },
+    { menuItemName: 'Veggie Wrap', orderCount: 5 },
   ]
 }
 
@@ -267,68 +246,30 @@ export async function getDailyReportByLocation(_params?: {
     {
       locationName: 'Main Office',
       orderCount: 22,
-      costTotal: 720000,
-      departments: [
-        {
-          departmentName: 'Engineering',
-          orderCount: 15,
-          costTotal: 480000,
-          employees: [
-            { employeeName: 'John Smith', menuItemName: 'Grilled Chicken Bowl', cost: 32000, notDelivered: false },
-            { employeeName: 'Mike Chen', menuItemName: 'Beef Stroganoff', cost: 38000, notDelivered: false },
-            { employeeName: 'Tom Wilson', menuItemName: 'Caesar Salad', cost: 25000, notDelivered: true },
-            { employeeName: 'Lisa Wang', menuItemName: 'Pasta Primavera', cost: 30000, notDelivered: false },
-          ],
-        },
-        {
-          departmentName: 'Marketing',
-          orderCount: 7,
-          costTotal: 240000,
-          employees: [
-            { employeeName: 'Sarah Johnson', menuItemName: 'Caesar Salad', cost: 25000, notDelivered: false },
-            { employeeName: 'Jessica Lee', menuItemName: 'Veggie Wrap', cost: 24000, notDelivered: false },
-          ],
-        },
+      menuItems: [
+        { menuItemName: 'Grilled Chicken Bowl', orderCount: 6 },
+        { menuItemName: 'Caesar Salad', orderCount: 5 },
+        { menuItemName: 'Beef Stroganoff', orderCount: 4 },
+        { menuItemName: 'Pasta Primavera', orderCount: 4 },
+        { menuItemName: 'Veggie Wrap', orderCount: 3 },
       ],
     },
     {
       locationName: 'Building B - Cafeteria',
       orderCount: 8,
-      costTotal: 260000,
-      departments: [
-        {
-          departmentName: 'Sales',
-          orderCount: 6,
-          costTotal: 210000,
-          employees: [
-            { employeeName: 'Alex Turner', menuItemName: 'Fish & Chips', cost: 35000, notDelivered: false },
-            { employeeName: 'David Brown', menuItemName: 'Grilled Chicken Bowl', cost: 32000, notDelivered: false },
-          ],
-        },
-        {
-          departmentName: 'HR',
-          orderCount: 2,
-          costTotal: 50000,
-          employees: [
-            { employeeName: 'Rachel Kim', menuItemName: 'Caesar Salad', cost: 25000, notDelivered: false },
-          ],
-        },
+      menuItems: [
+        { menuItemName: 'Fish & Chips', orderCount: 4 },
+        { menuItemName: 'Grilled Chicken Bowl', orderCount: 2 },
+        { menuItemName: 'Caesar Salad', orderCount: 2 },
       ],
     },
     {
       locationName: 'Warehouse Office',
       orderCount: 3,
-      costTotal: 102000,
-      departments: [
-        {
-          departmentName: 'Operations',
-          orderCount: 3,
-          costTotal: 102000,
-          employees: [
-            { employeeName: 'James Park', menuItemName: 'Beef Stroganoff', cost: 38000, notDelivered: false },
-            { employeeName: 'Nina Patel', menuItemName: 'Grilled Chicken Bowl', cost: 32000, notDelivered: false },
-          ],
-        },
+      menuItems: [
+        { menuItemName: 'Beef Stroganoff', orderCount: 1 },
+        { menuItemName: 'Grilled Chicken Bowl', orderCount: 1 },
+        { menuItemName: 'Veggie Wrap', orderCount: 1 },
       ],
     },
   ]
