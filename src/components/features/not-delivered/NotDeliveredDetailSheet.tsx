@@ -1,8 +1,10 @@
+import { useQuery } from '@tanstack/react-query'
 import * as Dialog from '@radix-ui/react-dialog'
-import { X } from 'lucide-react'
+import { X, Loader2 } from 'lucide-react'
 import { REQUEST_STATUSES } from '@/lib/constants'
 import type { RequestStatus } from '@/lib/constants'
 import { cn, formatDate } from '@/lib/utils'
+import { getNotDeliveredRequest } from '@/services/not-delivered.service'
 import type { NotDeliveredRequest } from '@/types/not-delivered.types'
 
 const statusColors: Record<RequestStatus, string> = {
@@ -22,7 +24,18 @@ export default function NotDeliveredDetailSheet({
   onOpenChange,
   request,
 }: NotDeliveredDetailSheetProps) {
+  // List endpoint only returns summary — the list-item `request` has no
+  // `affectedOrders`. Fetch the full detail when the sheet opens.
+  const { data: detail, isLoading } = useQuery({
+    queryKey: ['notDeliveredRequest', request?.id],
+    queryFn: () => getNotDeliveredRequest(request!.id),
+    enabled: open && !!request,
+  })
+
   if (!request) return null
+
+  const view = detail ?? request
+  const affectedOrders = view.affectedOrders ?? []
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -45,51 +58,60 @@ export default function NotDeliveredDetailSheet({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-500">Date</p>
-                  <p className="font-medium text-gray-900">{formatDate(request.date)}</p>
+                  <p className="font-medium text-gray-900">{formatDate(view.date)}</p>
                 </div>
                 <span
                   className={cn(
                     'inline-block rounded-full px-2.5 py-0.5 text-xs font-medium',
-                    statusColors[request.status],
+                    statusColors[view.status],
                   )}
                 >
-                  {REQUEST_STATUSES[request.status]}
+                  {REQUEST_STATUSES[view.status]}
                 </span>
               </div>
 
               <div>
                 <p className="text-sm font-medium text-gray-700">
-                  Affected Orders ({request.affectedOrders.length})
+                  Affected Orders ({view.affectedOrderCount})
                 </p>
                 <div className="mt-2 divide-y rounded-md border">
-                  {request.affectedOrders.map((order) => (
-                    <div key={order.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
-                      <span className="font-medium text-gray-900">{order.employeeName}</span>
-                      <span className="text-gray-500">{order.menuItemName}</span>
+                  {isLoading && !detail ? (
+                    <div className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-gray-500">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading orders…
                     </div>
-                  ))}
+                  ) : affectedOrders.length === 0 ? (
+                    <div className="px-4 py-3 text-sm text-gray-400">No order details available.</div>
+                  ) : (
+                    affectedOrders.map((order) => (
+                      <div key={order.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+                        <span className="font-medium text-gray-900">{order.employeeName}</span>
+                        <span className="text-gray-500">{order.menuItemName}</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
-              {request.note && (
+              {view.note && (
                 <div>
                   <p className="text-sm font-medium text-gray-700">Your Note</p>
                   <p className="mt-1 rounded-md bg-gray-50 px-3 py-2 text-sm text-gray-600">
-                    {request.note}
+                    {view.note}
                   </p>
                 </div>
               )}
 
-              {request.responseNote && (
+              {view.responseNote && (
                 <div>
                   <p className="text-sm font-medium text-gray-700">Catering Company Response</p>
                   <p className={cn(
                     'mt-1 rounded-md px-3 py-2 text-sm',
-                    request.status === 'approved'
+                    view.status === 'approved'
                       ? 'bg-green-50 text-green-700'
                       : 'bg-red-50 text-red-700',
                   )}>
-                    {request.responseNote}
+                    {view.responseNote}
                   </p>
                 </div>
               )}

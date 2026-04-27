@@ -41,7 +41,7 @@ export default function NotDeliveredPage() {
       header: 'Affected Orders',
       cell: ({ row }) => (
         <span className="text-gray-700">
-          {row.original.affectedOrders.length} order{row.original.affectedOrders.length !== 1 ? 's' : ''}
+          {row.original.affectedOrderCount} order{row.original.affectedOrderCount !== 1 ? 's' : ''}
         </span>
       ),
     },

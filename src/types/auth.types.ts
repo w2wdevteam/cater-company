@@ -1,10 +1,18 @@
+export type UserRole = 'company-admin'
+export type UserStatus = 'active' | 'inactive'
+
 export interface User {
   id: string
+  fullName: string
   phone: string
-  name: string
-  role: 'company-admin'
+  email: string | null
+  role: UserRole
+  status: UserStatus
+  cateringId: string
+  cateringName: string
   companyId: string
   companyName: string
+  lastLogin: string | null
 }
 
 export interface LoginCredentials {
@@ -14,5 +22,12 @@ export interface LoginCredentials {
 
 export interface LoginResponse {
   user: User
-  token: string
+  accessToken: string
+  refreshToken: string
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
 }

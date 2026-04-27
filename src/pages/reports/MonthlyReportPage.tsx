@@ -9,7 +9,7 @@ import { formatCurrency } from '@/lib/utils'
 import { MonthPicker } from '@/components/ui/date-picker'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { getMonthlyReport } from '@/services/reports.service'
-import { mockDepartments } from '@/services/employees.service'
+import { useDepartmentOptions } from '@/hooks/useDepartments'
 import type { MonthlyReportRow } from '@/types/report.types'
 
 export default function MonthlyReportPage() {
@@ -18,6 +18,7 @@ export default function MonthlyReportPage() {
   const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7))
   const [department, setDepartment] = useState('')
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const departments = useDepartmentOptions()
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['report', 'monthly', month, department],
@@ -54,7 +55,7 @@ export default function MonthlyReportPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="_all">All Departments</SelectItem>
-            {mockDepartments.map((d) => (
+            {departments.map((d) => (
               <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
             ))}
           </SelectContent>

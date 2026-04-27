@@ -36,4 +36,5 @@ export interface PlaceOrderData {
   employeeId?: string
   menuItemId: string
   isCompanyLevel: boolean
+  quantity?: number
 }

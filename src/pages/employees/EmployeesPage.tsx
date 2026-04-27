@@ -13,7 +13,7 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 import { Button } from '@/components/ui/button'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { useEmployees, useUpdateEmployeeStatus } from '@/hooks/useEmployees'
-import { mockDepartments } from '@/services/employees.service'
+import { useDepartmentOptions } from '@/hooks/useDepartments'
 import type { Employee } from '@/types/employee.types'
 import EmployeeSheet from './EmployeeSheet'
 
@@ -38,6 +38,7 @@ export default function EmployeesPage() {
 
   const { data, isLoading, isError, refetch } = useEmployees(filters)
   const statusMutation = useUpdateEmployeeStatus()
+  const departments = useDepartmentOptions()
 
   const hasActiveFilters = !!(search || department || status)
 
@@ -173,7 +174,7 @@ export default function EmployeesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="_all">All Departments</SelectItem>
-                {mockDepartments.map((d) => (
+                {departments.map((d) => (
                   <SelectItem key={d.id} value={d.id}>
                     {d.name}
                   </SelectItem>

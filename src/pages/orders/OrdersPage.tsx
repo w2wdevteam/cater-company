@@ -18,7 +18,7 @@ import type { OrderStatus } from '@/lib/constants'
 import { cn, formatDateTime, formatCurrency } from '@/lib/utils'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
-import { mockDepartments } from '@/services/employees.service'
+import { useDepartmentOptions } from '@/hooks/useDepartments'
 import type { Order, OrderFilters } from '@/types/order.types'
 
 const statusColors: Record<OrderStatus, string> = {
@@ -39,6 +39,7 @@ export default function OrdersPage() {
   const cancelMut = useCancelOrder()
   const rejectMut = useRejectOrder()
   const { data: deliveryData } = useDeliveryStatus()
+  const departments = useDepartmentOptions()
 
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null)
   const [rejectTarget, setRejectTarget] = useState<Order | null>(null)
@@ -184,7 +185,7 @@ export default function OrdersPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="_all">All Departments</SelectItem>
-                {mockDepartments.map((d) => (
+                {departments.map((d) => (
                   <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                 ))}
               </SelectContent>

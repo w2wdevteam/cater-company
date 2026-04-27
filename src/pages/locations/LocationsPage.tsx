@@ -16,6 +16,7 @@ import {
   updateLocation,
   deleteLocation,
 } from '@/services/locations.service'
+import { getApiErrorMessage } from '@/lib/api-errors'
 import type { Location, LocationFormData } from '@/types/common.types'
 import LocationSheet from './LocationSheet'
 
@@ -39,6 +40,7 @@ export default function LocationsPage() {
       toast.success('Location created')
       setSheetOpen(false)
     },
+    onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to create location')),
   })
 
   const updateMut = useMutation({
@@ -49,6 +51,7 @@ export default function LocationsPage() {
       toast.success('Location updated')
       setSheetOpen(false)
     },
+    onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to update location')),
   })
 
   const deleteMut = useMutation({
@@ -58,6 +61,7 @@ export default function LocationsPage() {
       toast.success('Location deleted')
       setDeleteTarget(null)
     },
+    onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to delete location')),
   })
 
   function handleCreate() {

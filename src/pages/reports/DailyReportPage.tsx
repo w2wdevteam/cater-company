@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { getDailyReport, getDailyReportByMenu, getDailyReportByLocation } from '@/services/reports.service'
-import { mockDepartments } from '@/services/employees.service'
+import { useDepartmentOptions } from '@/hooks/useDepartments'
 import type { DailyReportDepartment, DailyReportMenuGroup, DailyReportLocationGroup } from '@/types/report.types'
 
 type ViewMode = 'department' | 'menu' | 'location'
@@ -27,6 +27,7 @@ export default function DailyReportPage() {
   const [department, setDepartment] = useState('')
   const [view, setView] = useState<ViewMode>('department')
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
+  const departments = useDepartmentOptions()
 
   const deptQuery = useQuery({
     queryKey: ['report', 'daily', 'dept', date, department],
@@ -89,7 +90,7 @@ export default function DailyReportPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="_all">All Departments</SelectItem>
-              {mockDepartments.map((d) => (
+              {departments.map((d) => (
                 <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
               ))}
             </SelectContent>

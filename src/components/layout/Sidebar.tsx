@@ -24,6 +24,7 @@ import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useUiStore } from '@/store/ui.store'
 import { useAuthStore } from '@/store/auth.store'
+import { useMyCompany } from '@/hooks/useMyCompany'
 import { Button } from '@/components/ui/button'
 
 interface NavItem {
@@ -101,10 +102,14 @@ export default function Sidebar() {
   const location = useLocation()
   const collapsed = useUiStore((s) => s.sidebarCollapsed)
   const toggle = useUiStore((s) => s.toggleSidebar)
-  const companyName = useAuthStore((s) => s.user?.companyName ?? 'Company')
+  const profileCompanyName = useAuthStore((s) => s.user?.companyName ?? 'Company')
+  const { data: company } = useMyCompany()
+  const companyName = company?.name ?? profileCompanyName
+  const logoUrl = company?.logoUrl ?? null
 
   function isActive(path: string) {
     if (path === '/dashboard') return location.pathname === '/dashboard'
+    if (path === '/settings') return location.pathname === '/settings'
     return location.pathname.startsWith(path)
   }
 
@@ -122,9 +127,17 @@ export default function Sidebar() {
           collapsed ? 'justify-center' : 'gap-3',
         )}
       >
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <UtensilsCrossed className="h-4 w-4" />
-        </div>
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt={companyName}
+            className="h-8 w-8 shrink-0 rounded-lg object-cover"
+          />
+        ) : (
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <UtensilsCrossed className="h-4 w-4" />
+          </div>
+        )}
         {!collapsed && (
           <span className="truncate text-sm font-semibold text-gray-900">
             {companyName}

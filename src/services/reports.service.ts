@@ -1,3 +1,5 @@
+import { reportsApi } from '@/api/endpoints/reports.api'
+import { ordersApi } from '@/api/endpoints/orders.api'
 import type {
   DailyReportDepartment,
   DailyReportMenuGroup,
@@ -9,268 +11,215 @@ import type {
   DailyStatusData,
   CancellationRow,
 } from '@/types/report.types'
+import type { RequestStatus } from '@/lib/constants'
 
-
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-export async function getDailyReport(_params?: {
+export async function getDailyReport(params?: {
   date?: string
   from?: string
   to?: string
   department?: string
 }): Promise<DailyReportDepartment[]> {
-  await delay(600)
-  return [
-    {
-      departmentName: 'Engineering',
-      orderCount: 15,
-      menuItems: [
-        { menuItemName: 'Grilled Chicken Bowl', orderCount: 5 },
-        { menuItemName: 'Beef Stroganoff', orderCount: 4 },
-        { menuItemName: 'Caesar Salad', orderCount: 3 },
-        { menuItemName: 'Pasta Primavera', orderCount: 3 },
-      ],
-    },
-    {
-      departmentName: 'Marketing',
-      orderCount: 10,
-      menuItems: [
-        { menuItemName: 'Caesar Salad', orderCount: 4 },
-        { menuItemName: 'Veggie Wrap', orderCount: 3 },
-        { menuItemName: 'Pasta Primavera', orderCount: 3 },
-      ],
-    },
-    {
-      departmentName: 'Sales',
-      orderCount: 8,
-      menuItems: [
-        { menuItemName: 'Fish & Chips', orderCount: 4 },
-        { menuItemName: 'Grilled Chicken Bowl', orderCount: 4 },
-      ],
-    },
-  ]
+  const res = await reportsApi.dailyByDepartment({
+    date: params?.date,
+    departmentId:
+      params?.department && params.department !== 'all' ? params.department : undefined,
+  })
+  return res.departments.map((d) => ({
+    departmentName: d.departmentName,
+    orderCount: d.orderCount,
+    menuItems: d.menuBreakdown.map((m) => ({
+      menuItemName: m.menuItemName,
+      orderCount: m.quantity,
+    })),
+  }))
 }
 
-export async function getWeeklyReport(_params?: {
+/** Monday of the current ISO week in UTC, as YYYY-MM-DD. Backend requires a Monday. */
+function currentMondayUtc(): string {
+  const now = new Date()
+  const dow = now.getUTCDay() // 0=Sun, 1=Mon, ... 6=Sat
+  const daysFromMonday = (dow + 6) % 7 // Mon->0, Sun->6
+  const monday = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() - daysFromMonday,
+  ))
+  return monday.toISOString().slice(0, 10)
+}
+
+export async function getWeeklyReport(params?: {
   from?: string
   to?: string
   department?: string
 }): Promise<WeeklyReportRow[]> {
-  await delay(600)
-  return [
-    {
-      employeeName: 'John Smith',
-      departmentName: 'Engineering',
-      days: {
-        Mon: { menuItemName: 'Chicken Bowl', notDelivered: false },
-        Tue: { menuItemName: 'Caesar Salad', notDelivered: false },
-        Wed: null,
-        Thu: { menuItemName: 'Beef Stroganoff', notDelivered: false },
-        Fri: { menuItemName: 'Fish & Chips', notDelivered: true },
-      },
-      totalOrders: 4,
-      totalCost: 130000,
-    },
-    {
-      employeeName: 'Sarah Johnson',
-      departmentName: 'Marketing',
-      days: {
-        Mon: { menuItemName: 'Veggie Wrap', notDelivered: false },
-        Tue: null,
-        Wed: { menuItemName: 'Pasta Primavera', notDelivered: false },
-        Thu: { menuItemName: 'Caesar Salad', notDelivered: false },
-        Fri: null,
-      },
-      totalOrders: 3,
-      totalCost: 79000,
-    },
-    {
-      employeeName: 'Mike Chen',
-      departmentName: 'Engineering',
-      days: {
-        Mon: { menuItemName: 'Beef Stroganoff', notDelivered: false },
-        Tue: { menuItemName: 'Chicken Bowl', notDelivered: false },
-        Wed: { menuItemName: 'Fish & Chips', notDelivered: false },
-        Thu: null,
-        Fri: { menuItemName: 'Veggie Wrap', notDelivered: false },
-      },
-      totalOrders: 4,
-      totalCost: 129000,
-    },
-    {
-      employeeName: 'Alex Turner',
-      departmentName: 'Sales',
-      days: {
-        Mon: null,
-        Tue: { menuItemName: 'Chicken Bowl', notDelivered: false },
-        Wed: { menuItemName: 'Caesar Salad', notDelivered: true },
-        Thu: { menuItemName: 'Pasta Primavera', notDelivered: false },
-        Fri: { menuItemName: 'Fish & Chips', notDelivered: false },
-      },
-      totalOrders: 4,
-      totalCost: 122000,
-    },
-  ]
+  // Backend requires either (dateFrom + dateTo) or weekStart. Default to this week's Monday.
+  const hasRange = !!(params?.from && params?.to)
+  const res = await reportsApi.weekly({
+    dateFrom: hasRange ? params?.from : undefined,
+    dateTo: hasRange ? params?.to : undefined,
+    weekStart: hasRange ? undefined : currentMondayUtc(),
+    departmentId:
+      params?.department && params.department !== 'all' ? params.department : undefined,
+  })
+  return res.employees.map((e) => ({
+    employeeName: e.employeeName,
+    departmentName: e.departmentName ?? '—',
+    // Backend does not tag per-day not-delivered on the weekly view; default to false.
+    days: Object.fromEntries(
+      Object.entries(e.days).map(([day, cell]) => [
+        day,
+        cell ? { menuItemName: cell.menuItemName, notDelivered: false } : null,
+      ]),
+    ),
+    totalOrders: e.totalOrders,
+    totalCost: e.totalCost,
+  }))
 }
 
-export async function getMonthlyReport(_params?: {
+export async function getMonthlyReport(params?: {
   month?: string
   department?: string
 }): Promise<MonthlyReportRow[]> {
-  await delay(600)
-  return [
-    {
-      employeeName: 'John Smith', departmentName: 'Engineering', orderCount: 18, totalCost: 585000,
-      menuItems: [
-        { menuItemName: 'Chicken Bowl', orderCount: 6 },
-        { menuItemName: 'Beef Stroganoff', orderCount: 5 },
-        { menuItemName: 'Caesar Salad', orderCount: 4 },
-        { menuItemName: 'Fish & Chips', orderCount: 3 },
-      ],
-    },
-    {
-      employeeName: 'Mike Chen', departmentName: 'Engineering', orderCount: 16, totalCost: 522000,
-      menuItems: [
-        { menuItemName: 'Beef Stroganoff', orderCount: 7 },
-        { menuItemName: 'Chicken Bowl', orderCount: 5 },
-        { menuItemName: 'Veggie Wrap', orderCount: 4 },
-      ],
-    },
-    {
-      employeeName: 'Sarah Johnson', departmentName: 'Marketing', orderCount: 14, totalCost: 360000,
-      menuItems: [
-        { menuItemName: 'Caesar Salad', orderCount: 6 },
-        { menuItemName: 'Veggie Wrap', orderCount: 5 },
-        { menuItemName: 'Pasta Primavera', orderCount: 3 },
-      ],
-    },
-    {
-      employeeName: 'Alex Turner', departmentName: 'Sales', orderCount: 15, totalCost: 490000,
-      menuItems: [
-        { menuItemName: 'Fish & Chips', orderCount: 6 },
-        { menuItemName: 'Chicken Bowl', orderCount: 5 },
-        { menuItemName: 'Pasta Primavera', orderCount: 4 },
-      ],
-    },
-    {
-      employeeName: 'David Brown', departmentName: 'Sales', orderCount: 12, totalCost: 408000,
-      menuItems: [
-        { menuItemName: 'Chicken Bowl', orderCount: 8 },
-        { menuItemName: 'Beef Stroganoff', orderCount: 4 },
-      ],
-    },
-  ]
+  // Backend requires `month`; fall back to current month if the page omitted it.
+  const month = params?.month ?? new Date().toISOString().slice(0, 7)
+  const res = await reportsApi.monthly({
+    month,
+    departmentId:
+      params?.department && params.department !== 'all' ? params.department : undefined,
+  })
+  return res.employees.map((e) => ({
+    employeeName: e.employeeName,
+    departmentName: e.departmentName ?? '—',
+    orderCount: e.orderCount,
+    totalCost: e.totalCost,
+    menuItems: e.menuBreakdown.map((m) => ({
+      menuItemName: m.menuItemName,
+      orderCount: m.quantity,
+    })),
+  }))
 }
 
 export async function getYtdReport(): Promise<YtdRow[]> {
-  await delay(600)
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const res = await reportsApi.ytd()
+  // Backend returns cost per month + one year-wide runningTotal. Convert to
+  // the FE-shaped row-per-month with a client-computed running total and
+  // null orderCount (backend does not expose counts on the YTD view).
   let running = 0
-  return months.map((month, i) => {
-    if (i > 3) return { month, orderCount: null, totalCost: null, runningTotal: null }
-    const count = [320, 295, 340, 180][i]
-    const cost = [10240000, 9440000, 10880000, 5760000][i]
-    running += cost
-    return { month, orderCount: count, totalCost: cost, runningTotal: running }
+  const nowMonth = new Date().toISOString().slice(0, 7)
+  return res.months.map((m) => {
+    const isFuture = m.month > nowMonth
+    const cost = isFuture ? null : m.cost
+    if (cost != null) running += cost
+    return {
+      month: m.month,
+      orderCount: null,
+      totalCost: cost,
+      runningTotal: cost == null ? null : running,
+    }
   })
 }
 
-export async function getNotDeliveredSummary(_params?: {
+export async function getNotDeliveredSummary(params?: {
   from?: string
   to?: string
 }): Promise<NotDeliveredSummaryRow[]> {
-  await delay(600)
-  return [
-    { date: '2026-04-16', affectedOrders: 2, totalValue: 57000, status: 'approved' },
-    { date: '2026-04-15', affectedOrders: 1, totalValue: 38000, status: 'pending' },
-    { date: '2026-04-14', affectedOrders: 3, totalValue: 92000, status: 'rejected' },
-    { date: '2026-04-10', affectedOrders: 1, totalValue: 32000, status: 'approved' },
-    { date: '2026-04-07', affectedOrders: 4, totalValue: 130000, status: 'approved' },
-  ]
+  const res = await reportsApi.notDeliveredSummary({
+    dateFrom: params?.from,
+    dateTo: params?.to,
+  })
+  return res.requests.map((r) => ({
+    date: r.submittedAt.slice(0, 10),
+    affectedOrders: r.affectedOrderCount,
+    totalValue: r.totalValue,
+    status: r.status as RequestStatus,
+  }))
 }
 
 export async function getDailyStatus(): Promise<DailyStatusData> {
-  await delay(500)
+  const res = await ordersApi.todayStatus()
   return {
-    ordered: [
-      { employeeName: 'John Smith', menuItemName: 'Grilled Chicken Bowl' },
-      { employeeName: 'Sarah Johnson', menuItemName: 'Caesar Salad' },
-      { employeeName: 'Mike Chen', menuItemName: 'Beef Stroganoff' },
-      { employeeName: 'David Brown', menuItemName: 'Fish & Chips' },
-      { employeeName: 'Lisa Wang', menuItemName: 'Pasta Primavera' },
-    ],
-    notOrdered: [
-      { employeeName: 'Emily Davis', departmentName: 'Marketing' },
-      { employeeName: 'Alex Turner', departmentName: 'Sales' },
-      { employeeName: 'Rachel Kim', departmentName: 'HR' },
-    ],
+    ordered: res.ordered.map((o) => ({
+      employeeName: o.employeeName,
+      menuItemName: o.menuItemName,
+    })),
+    notOrdered: res.notOrdered.map((o) => ({
+      employeeName: o.employeeName,
+      departmentName: o.departmentName ?? '—',
+    })),
     updatedAt: new Date().toISOString(),
   }
 }
 
-export async function getCancellationLog(_params?: {
+export async function getCancellationLog(params?: {
   from?: string
   to?: string
 }): Promise<CancellationRow[]> {
-  await delay(600)
-  return [
-    { employeeName: 'Emily Davis', menuItemName: 'Pasta Primavera', orderDate: '2026-04-17', cancelledAt: '2026-04-17T09:15:00Z' },
-    { employeeName: 'Tom Wilson', menuItemName: 'Veggie Wrap', orderDate: '2026-04-16', cancelledAt: '2026-04-16T08:45:00Z' },
-    { employeeName: 'Jessica Lee', menuItemName: 'Caesar Salad', orderDate: '2026-04-15', cancelledAt: '2026-04-15T10:00:00Z' },
-    { employeeName: 'Alex Turner', menuItemName: 'Chicken Bowl', orderDate: '2026-04-14', cancelledAt: '2026-04-14T09:30:00Z' },
-  ]
+  const res = await reportsApi.cancellationLog({
+    dateFrom: params?.from,
+    dateTo: params?.to,
+  })
+  return res.entries.map((e) => ({
+    employeeName: e.employeeName ?? '—',
+    menuItemName: e.menuItemName,
+    orderDate: e.orderDate,
+    cancelledAt: e.cancelledAt,
+  }))
 }
 
-export async function getDailyReportByMenu(_params?: {
+export async function getDailyReportByMenu(params?: {
   date?: string
   department?: string
 }): Promise<DailyReportMenuGroup[]> {
-  await delay(600)
-  return [
-    { menuItemName: 'Grilled Chicken Bowl', orderCount: 8 },
-    { menuItemName: 'Caesar Salad', orderCount: 6 },
-    { menuItemName: 'Beef Stroganoff', orderCount: 5 },
-    { menuItemName: 'Pasta Primavera', orderCount: 4 },
-    { menuItemName: 'Fish & Chips', orderCount: 5 },
-    { menuItemName: 'Veggie Wrap', orderCount: 5 },
-  ]
+  const res = await reportsApi.dailyByMenu({
+    date: params?.date,
+    departmentId:
+      params?.department && params.department !== 'all' ? params.department : undefined,
+  })
+  return res.items
 }
 
-export async function getDailyReportByLocation(_params?: {
+export async function getDailyReportByLocation(params?: {
   date?: string
 }): Promise<DailyReportLocationGroup[]> {
-  await delay(600)
-  return [
-    {
-      locationName: 'Main Office',
-      orderCount: 22,
-      menuItems: [
-        { menuItemName: 'Grilled Chicken Bowl', orderCount: 6 },
-        { menuItemName: 'Caesar Salad', orderCount: 5 },
-        { menuItemName: 'Beef Stroganoff', orderCount: 4 },
-        { menuItemName: 'Pasta Primavera', orderCount: 4 },
-        { menuItemName: 'Veggie Wrap', orderCount: 3 },
-      ],
-    },
-    {
-      locationName: 'Building B - Cafeteria',
-      orderCount: 8,
-      menuItems: [
-        { menuItemName: 'Fish & Chips', orderCount: 4 },
-        { menuItemName: 'Grilled Chicken Bowl', orderCount: 2 },
-        { menuItemName: 'Caesar Salad', orderCount: 2 },
-      ],
-    },
-    {
-      locationName: 'Warehouse Office',
-      orderCount: 3,
-      menuItems: [
-        { menuItemName: 'Beef Stroganoff', orderCount: 1 },
-        { menuItemName: 'Grilled Chicken Bowl', orderCount: 1 },
-        { menuItemName: 'Veggie Wrap', orderCount: 1 },
-      ],
-    },
-  ]
+  const res = await reportsApi.dailyByLocation({ date: params?.date })
+  return res.locations.map((l) => ({
+    locationName: l.locationName,
+    orderCount: l.orderCount,
+    menuItems: l.menuBreakdown.map((m) => ({
+      menuItemName: m.menuItemName,
+      orderCount: m.quantity,
+    })),
+  }))
+}
+
+export interface LocationReportDepartment {
+  departmentName: string
+  orderCount: number
+  menuBreakdown: string
+}
+
+export interface LocationReportGroup {
+  locationName: string
+  departments: LocationReportDepartment[]
+}
+
+export async function getLocationReport(params?: {
+  from?: string
+  to?: string
+}): Promise<LocationReportGroup[]> {
+  const res = await reportsApi.byLocation({
+    dateFrom: params?.from,
+    dateTo: params?.to,
+  })
+  return res.locations.map((l) => ({
+    locationName: l.locationName,
+    departments: l.departments.map((d) => ({
+      departmentName: d.departmentName,
+      orderCount: d.totalOrders,
+      // Page renders this field as a plain string, so flatten the items.
+      menuBreakdown: d.menuBreakdown
+        .map((m) => `${m.menuItemName} (${m.quantity})`)
+        .join(', '),
+    })),
+  }))
 }

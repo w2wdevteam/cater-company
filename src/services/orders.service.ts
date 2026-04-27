@@ -1,3 +1,4 @@
+import { ordersApi, type ApiOrder } from '@/api/endpoints/orders.api'
 import type { OrderStatus } from '@/lib/constants'
 import type {
   Order,
@@ -5,207 +6,63 @@ import type {
   OrderListResponse,
   PlaceOrderData,
 } from '@/types/order.types'
+import { useAuthStore } from '@/store/auth.store'
 
-const mockOrders: Order[] = [
-  {
-    id: 'ord-1',
-    employeeId: '1',
-    employeeName: 'John Smith',
-    menuItemId: 'm1',
-    menuItemName: 'Grilled Chicken Bowl',
-    menuItemPrice: 12.5,
-    departmentId: 'dept-1',
-    departmentName: 'Engineering',
-    isCompanyLevel: false,
-    status: 'new',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'ord-2',
-    employeeId: '2',
-    employeeName: 'Sarah Johnson',
-    menuItemId: 'm2',
-    menuItemName: 'Caesar Salad',
-    menuItemPrice: 9.0,
-    departmentId: 'dept-2',
-    departmentName: 'Marketing',
-    isCompanyLevel: false,
-    status: 'new',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'ord-3',
-    employeeId: '3',
-    employeeName: 'Mike Chen',
-    menuItemId: 'm3',
-    menuItemName: 'Beef Stroganoff',
-    menuItemPrice: 14.0,
-    departmentId: 'dept-1',
-    departmentName: 'Engineering',
-    isCompanyLevel: false,
-    status: 'delivered',
-    createdAt: '2026-04-17T10:30:00Z',
-  },
-  {
-    id: 'ord-4',
-    employeeName: 'Company Order',
-    menuItemId: 'm4',
-    menuItemName: 'Veggie Wrap',
-    menuItemPrice: 8.5,
-    isCompanyLevel: true,
-    status: 'on_the_way',
-    createdAt: '2026-04-17T09:00:00Z',
-  },
-  {
-    id: 'ord-5',
-    employeeId: '5',
-    employeeName: 'Emily Davis',
-    menuItemId: 'm5',
-    menuItemName: 'Pasta Primavera',
-    menuItemPrice: 11.0,
-    departmentId: 'dept-2',
-    departmentName: 'Marketing',
-    isCompanyLevel: false,
-    status: 'rejected',
-    rejectionReason: 'Item out of stock',
-    createdAt: '2026-04-17T08:45:00Z',
-  },
-  {
-    id: 'ord-6',
-    employeeId: '6',
-    employeeName: 'Alex Turner',
-    menuItemId: 'm1',
-    menuItemName: 'Grilled Chicken Bowl',
-    menuItemPrice: 12.5,
-    departmentId: 'dept-3',
-    departmentName: 'Sales',
-    isCompanyLevel: false,
-    status: 'not_delivered',
-    createdAt: '2026-04-16T11:00:00Z',
-  },
-  {
-    id: 'ord-7',
-    employeeId: '7',
-    employeeName: 'David Brown',
-    menuItemId: 'm6',
-    menuItemName: 'Fish & Chips',
-    menuItemPrice: 13.5,
-    departmentId: 'dept-3',
-    departmentName: 'Sales',
-    isCompanyLevel: false,
-    status: 'new',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'ord-8',
-    employeeId: '8',
-    employeeName: 'Rachel Kim',
-    menuItemId: 'm2',
-    menuItemName: 'Caesar Salad',
-    menuItemPrice: 9.0,
-    departmentId: 'dept-4',
-    departmentName: 'HR',
-    isCompanyLevel: false,
-    status: 'delivered',
-    createdAt: '2026-04-16T10:15:00Z',
-  },
-  {
-    id: 'ord-9',
-    employeeId: '4',
-    employeeName: 'Lisa Wang',
-    menuItemId: 'm3',
-    menuItemName: 'Beef Stroganoff',
-    menuItemPrice: 14.0,
-    departmentId: 'dept-1',
-    departmentName: 'Engineering',
-    isCompanyLevel: false,
-    status: 'new',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'ord-10',
-    employeeId: '10',
-    employeeName: 'Jessica Lee',
-    menuItemId: 'm4',
-    menuItemName: 'Veggie Wrap',
-    menuItemPrice: 8.5,
-    departmentId: 'dept-2',
-    departmentName: 'Marketing',
-    isCompanyLevel: false,
-    status: 'arrived',
-    createdAt: '2026-04-16T09:30:00Z',
-  },
-]
-
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+function mapOrder(o: ApiOrder): Order {
+  return {
+    id: o.id,
+    employeeId: o.employeeId ?? undefined,
+    employeeName: o.employeeName ?? (o.isCompanyLevel ? 'Company Order' : '—'),
+    menuItemId: o.menuItemId,
+    menuItemName: o.menuItemName,
+    menuItemPrice: o.unitPrice,
+    departmentId: o.departmentId ?? undefined,
+    departmentName: o.departmentName ?? undefined,
+    isCompanyLevel: o.isCompanyLevel,
+    status: o.status as OrderStatus,
+    rejectionReason: o.rejectionReason ?? undefined,
+    createdAt: o.createdAt,
+  }
 }
 
 export async function getOrders(filters: OrderFilters = {}): Promise<OrderListResponse> {
-  await delay(500)
-
-  let filtered = [...mockOrders]
-
-  if (filters.search) {
-    const q = filters.search.toLowerCase()
-    filtered = filtered.filter((o) => o.employeeName.toLowerCase().includes(q))
-  }
-
-  if (filters.department) {
-    filtered = filtered.filter((o) => o.departmentId === filters.department)
-  }
-
-  if (filters.status) {
-    filtered = filtered.filter((o) => o.status === filters.status)
-  }
-
-  if (filters.dateFrom) {
-    const from = new Date(filters.dateFrom)
-    filtered = filtered.filter((o) => new Date(o.createdAt) >= from)
-  }
-
-  if (filters.dateTo) {
-    const to = new Date(filters.dateTo + 'T23:59:59')
-    filtered = filtered.filter((o) => new Date(o.createdAt) <= to)
-  }
-
-  filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-
-  const page = filters.page ?? 1
-  const limit = filters.limit ?? 10
-  const start = (page - 1) * limit
-
+  const result = await ordersApi.list({
+    page: filters.page,
+    limit: filters.limit,
+    search: filters.search || undefined,
+    dateFrom: filters.dateFrom || undefined,
+    dateTo: filters.dateTo || undefined,
+    departmentId: filters.department && filters.department !== 'all' ? filters.department : undefined,
+    status:
+      filters.status && filters.status !== 'all'
+        ? (filters.status as ApiOrder['status'])
+        : undefined,
+  })
   return {
-    data: filtered.slice(start, start + limit),
-    total: filtered.length,
-    page,
-    limit,
+    data: result.data.map(mapOrder),
+    total: result.meta.total,
+    page: result.meta.page,
+    limit: result.meta.limit,
   }
 }
 
 export async function placeOrder(data: PlaceOrderData): Promise<Order> {
-  await delay(400)
-  return {
-    id: String(Date.now()),
-    employeeId: data.employeeId,
-    employeeName: data.isCompanyLevel ? 'Company Order' : 'Employee',
+  const companyId = useAuthStore.getState().user?.companyId
+  if (!companyId) throw new Error('Not authenticated')
+  const order = await ordersApi.create({
+    companyId,
     menuItemId: data.menuItemId,
-    menuItemName: 'Menu Item',
-    menuItemPrice: 0,
+    employeeId: data.isCompanyLevel ? undefined : data.employeeId,
     isCompanyLevel: data.isCompanyLevel,
-    status: 'new',
-    createdAt: new Date().toISOString(),
-  }
+    quantity: Math.max(1, data.quantity ?? 1),
+  })
+  return mapOrder(order)
 }
 
 export async function cancelOrder(id: string): Promise<Order> {
-  await delay(400)
-  const existing = mockOrders.find((o) => o.id === id)
-  return { ...existing!, status: 'rejected' as OrderStatus }
+  return mapOrder(await ordersApi.cancel(id))
 }
 
 export async function rejectOrder(id: string, reason?: string): Promise<Order> {
-  await delay(400)
-  const existing = mockOrders.find((o) => o.id === id)
-  return { ...existing!, status: 'rejected' as OrderStatus, rejectionReason: reason }
+  return mapOrder(await ordersApi.reject(id, { rejectionReason: reason }))
 }

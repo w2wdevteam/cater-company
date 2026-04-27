@@ -1,7 +1,10 @@
+import { useEffect } from 'react'
 import { RouterProvider } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'sonner'
+import { Loader2 } from 'lucide-react'
 import { router } from '@/router'
+import { useAuthStore } from '@/store/auth.store'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -10,6 +13,21 @@ const queryClient = new QueryClient({
 })
 
 export default function App() {
+  const bootstrap = useAuthStore((s) => s.bootstrap)
+  const bootstrapping = useAuthStore((s) => s.bootstrapping)
+
+  useEffect(() => {
+    void bootstrap()
+  }, [bootstrap])
+
+  if (bootstrapping) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />

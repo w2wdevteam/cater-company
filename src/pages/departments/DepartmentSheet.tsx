@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectSeparator } from '@/components/ui/select'
 import { getLocations, createLocation } from '@/services/locations.service'
+import { getApiErrorMessage } from '@/lib/api-errors'
 import type { Department, LocationFormData } from '@/types/common.types'
 import LocationSheet from '@/pages/locations/LocationSheet'
 
@@ -58,6 +59,7 @@ export default function DepartmentSheet({
       setLocationSheetOpen(false)
       setValue('location', newLoc.name)
     },
+    onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to create location')),
   })
 
   const {

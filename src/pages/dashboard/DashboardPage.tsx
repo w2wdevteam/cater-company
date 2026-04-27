@@ -3,7 +3,6 @@ import {
   ShoppingCart,
   UserX,
   Users,
-  Truck,
   UtensilsCrossed,
 } from 'lucide-react'
 import PageHeader from '@/components/common/PageHeader'
@@ -11,22 +10,12 @@ import StatCard from '@/components/common/StatCard'
 import EmptyState from '@/components/common/EmptyState'
 import ErrorBanner from '@/components/common/ErrorBanner'
 import { usePageTitle } from '@/hooks/usePageTitle'
-import { cn } from '@/lib/utils'
 import { formatCurrency } from '@/lib/utils'
-import { DELIVERY_STATUSES, type DeliveryStatus } from '@/lib/constants'
-import { useDeliveryStatus } from '@/hooks/useDeliveryStatus'
 import {
   getTodayStats,
   getTodayMenu,
   type MenuItem,
 } from '@/services/dashboard.service'
-
-const deliveryStatusStyles: Record<DeliveryStatus, string> = {
-  idle: 'bg-gray-100 text-gray-600',
-  on_the_way: 'bg-amber-100 text-amber-700 animate-pulse-slow',
-  arrived: 'bg-status-arrived-bg text-status-arrived-text',
-  delivered: 'bg-status-new-bg text-status-new-text',
-}
 
 function StatCardSkeleton() {
   return (
@@ -51,30 +40,6 @@ function MenuCardSkeleton() {
         <div className="h-3 w-12 animate-pulse rounded bg-gray-200" />
       </div>
     </div>
-  )
-}
-
-function DeliveryStatusBadge() {
-  const { data, isLoading } = useDeliveryStatus()
-
-  if (isLoading) {
-    return (
-      <div className="h-6 w-24 animate-pulse rounded-full bg-gray-200" />
-    )
-  }
-
-  const status = data?.status ?? 'idle'
-
-  return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium',
-        deliveryStatusStyles[status],
-      )}
-    >
-      <Truck className="h-3.5 w-3.5" />
-      {DELIVERY_STATUSES[status]}
-    </span>
   )
 }
 
@@ -120,7 +85,6 @@ export default function DashboardPage() {
       <PageHeader
         title="Dashboard"
         subtitle="Today's overview"
-        actions={<DeliveryStatusBadge />}
       />
 
       {statsQuery.isError && (

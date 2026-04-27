@@ -5,6 +5,7 @@ import {
   getNotDeliveredRequests,
   createNotDeliveredRequest,
 } from '@/services/not-delivered.service'
+import { getApiErrorMessage } from '@/lib/api-errors'
 
 export function useNotDeliveredRequests() {
   return useQuery({
@@ -21,5 +22,6 @@ export function useCreateNotDeliveredRequest() {
       qc.invalidateQueries({ queryKey: ['notDeliveredRequests'] })
       toast.success('Request submitted. Status: Pending.')
     },
+    onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to submit request')),
   })
 }

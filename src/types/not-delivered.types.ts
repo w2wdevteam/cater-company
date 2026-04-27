@@ -9,7 +9,9 @@ export interface AffectedOrder {
 export interface NotDeliveredRequest {
   id: string
   date: string
-  affectedOrders: AffectedOrder[]
+  affectedOrderCount: number
+  /** Populated only on the detail endpoint; the list endpoint leaves this `undefined`. */
+  affectedOrders?: AffectedOrder[]
   note?: string
   responseNote?: string
   status: RequestStatus

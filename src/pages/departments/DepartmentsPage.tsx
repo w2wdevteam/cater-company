@@ -16,6 +16,7 @@ import {
   updateDepartment,
   deleteDepartment,
 } from '@/services/departments.service'
+import { getApiErrorMessage } from '@/lib/api-errors'
 import type { Department, DepartmentFormData } from '@/types/common.types'
 import DepartmentSheet from './DepartmentSheet'
 
@@ -39,6 +40,7 @@ export default function DepartmentsPage() {
       toast.success('Department created')
       setSheetOpen(false)
     },
+    onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to create department')),
   })
 
   const updateMut = useMutation({
@@ -49,6 +51,7 @@ export default function DepartmentsPage() {
       toast.success('Department updated')
       setSheetOpen(false)
     },
+    onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to update department')),
   })
 
   const deleteMut = useMutation({
@@ -58,6 +61,7 @@ export default function DepartmentsPage() {
       toast.success('Department deleted')
       setDeleteTarget(null)
     },
+    onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to delete department')),
   })
 
   function handleCreate() {

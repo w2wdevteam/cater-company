@@ -7,6 +7,7 @@ import {
   cancelOrder,
   rejectOrder,
 } from '@/services/orders.service'
+import { getApiErrorMessage } from '@/lib/api-errors'
 
 export function useOrders(filters: OrderFilters) {
   return useQuery({
@@ -21,7 +22,6 @@ export function usePlaceOrder() {
     mutationFn: (data: PlaceOrderData) => placeOrder(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['orders'] })
-      toast.success('Order placed successfully.')
     },
   })
 }
@@ -34,6 +34,7 @@ export function useCancelOrder() {
       qc.invalidateQueries({ queryKey: ['orders'] })
       toast.success('Order cancelled.')
     },
+    onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to cancel order')),
   })
 }
 
@@ -45,5 +46,6 @@ export function useRejectOrder() {
       qc.invalidateQueries({ queryKey: ['orders'] })
       toast.success('Order rejected. Employee has been notified.')
     },
+    onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to reject order')),
   })
 }

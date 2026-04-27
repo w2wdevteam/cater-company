@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { changePassword } from '@/services/settings.service'
+import { getApiErrorMessage, getApiErrorStatus } from '@/lib/api-errors'
 
 const schema = z
   .object({
@@ -48,8 +49,12 @@ export default function SettingsPage() {
       toast.success('Password updated successfully.')
       reset()
     },
-    onError: () => {
-      setError('currentPassword', { message: 'Current password is incorrect.' })
+    onError: (err) => {
+      const message = getApiErrorMessage(err, 'Failed to update password')
+      toast.error(message)
+      if (getApiErrorStatus(err) === 401) {
+        setError('currentPassword', { message })
+      }
     },
   })
 

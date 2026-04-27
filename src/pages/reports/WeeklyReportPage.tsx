@@ -7,7 +7,7 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 import { cn, formatCurrency } from '@/lib/utils'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { getWeeklyReport } from '@/services/reports.service'
-import { mockDepartments } from '@/services/employees.service'
+import { useDepartmentOptions } from '@/hooks/useDepartments'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 
@@ -15,6 +15,7 @@ export default function WeeklyReportPage() {
   usePageTitle('Weekly Report')
 
   const [department, setDepartment] = useState('')
+  const departments = useDepartmentOptions()
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['report', 'weekly', department],
@@ -35,7 +36,7 @@ export default function WeeklyReportPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="_all">All Departments</SelectItem>
-            {mockDepartments.map((d) => (
+            {departments.map((d) => (
               <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
             ))}
           </SelectContent>

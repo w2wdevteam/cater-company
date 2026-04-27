@@ -1,72 +1,60 @@
+import {
+  notDeliveredApi,
+  type ApiNotDeliveredRequestDetail,
+  type ApiNotDeliveredRequestSummary,
+} from '@/api/endpoints/not-delivered.api'
 import type {
   NotDeliveredRequest,
   NotDeliveredCreateData,
 } from '@/types/not-delivered.types'
+import type { RequestStatus } from '@/lib/constants'
 
-const mockRequests: NotDeliveredRequest[] = [
-  {
-    id: 'ndr-1',
-    date: '2026-04-16',
-    affectedOrders: [
-      { id: 'ord-6', employeeName: 'Alex Turner', menuItemName: 'Grilled Chicken Bowl' },
-      { id: 'ord-10', employeeName: 'Jessica Lee', menuItemName: 'Veggie Wrap' },
-    ],
-    note: 'Driver did not arrive at Building B before cutoff.',
-    responseNote: 'Confirmed with driver. Refund issued for affected orders.',
-    status: 'approved',
-    createdAt: '2026-04-16T16:30:00Z',
-  },
-  {
-    id: 'ndr-2',
-    date: '2026-04-15',
-    affectedOrders: [
-      { id: 'ord-99', employeeName: 'Mike Chen', menuItemName: 'Beef Stroganoff' },
-    ],
-    note: 'Order was missing from the delivery.',
-    status: 'pending',
-    createdAt: '2026-04-15T17:00:00Z',
-  },
-  {
-    id: 'ndr-3',
-    date: '2026-04-14',
-    affectedOrders: [
-      { id: 'ord-100', employeeName: 'Sarah Johnson', menuItemName: 'Caesar Salad' },
-      { id: 'ord-101', employeeName: 'David Brown', menuItemName: 'Fish & Chips' },
-      { id: 'ord-102', employeeName: 'Rachel Kim', menuItemName: 'Pasta Primavera' },
-    ],
-    note: 'Entire delivery was not received at the warehouse location.',
-    responseNote: 'This was a scheduling error on our side. We cannot process a refund for this date.',
-    status: 'rejected',
-    createdAt: '2026-04-14T15:45:00Z',
-  },
-]
+function mapSummary(r: ApiNotDeliveredRequestSummary): NotDeliveredRequest {
+  return {
+    id: r.id,
+    // Backend summary has no per-order "affected date", so surface the submission date.
+    date: r.submittedAt.slice(0, 10),
+    affectedOrderCount: r.affectedOrderCount,
+    note: r.note ?? undefined,
+    responseNote: r.responseNote ?? undefined,
+    status: r.status as RequestStatus,
+    createdAt: r.submittedAt,
+  }
+}
 
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+function mapDetail(r: ApiNotDeliveredRequestDetail): NotDeliveredRequest {
+  return {
+    ...mapSummary(r),
+    affectedOrders: r.flaggedOrders.map((f) => ({
+      id: f.orderId,
+      employeeName: f.employeeName ?? '—',
+      menuItemName: f.menuItemName,
+    })),
+  }
 }
 
 export async function getNotDeliveredRequests(): Promise<NotDeliveredRequest[]> {
-  await delay(500)
-  return mockRequests
+  const result = await notDeliveredApi.list({ limit: 100 })
+  return result.data.map(mapSummary)
 }
 
-export async function getNotDeliveredRequest(id: string): Promise<NotDeliveredRequest | undefined> {
-  await delay(300)
-  return mockRequests.find((r) => r.id === id)
-}
-
-export async function createNotDeliveredRequest(data: NotDeliveredCreateData): Promise<NotDeliveredRequest> {
-  await delay(500)
-  return {
-    id: String(Date.now()),
-    date: data.date,
-    affectedOrders: data.orderIds.map((oid) => ({
-      id: oid,
-      employeeName: 'Employee',
-      menuItemName: 'Menu Item',
-    })),
-    note: data.note,
-    status: 'pending',
-    createdAt: new Date().toISOString(),
+export async function getNotDeliveredRequest(
+  id: string,
+): Promise<NotDeliveredRequest | undefined> {
+  try {
+    return mapDetail(await notDeliveredApi.get(id))
+  } catch {
+    return undefined
   }
+}
+
+export async function createNotDeliveredRequest(
+  data: NotDeliveredCreateData,
+): Promise<NotDeliveredRequest> {
+  return mapDetail(
+    await notDeliveredApi.submit({
+      orderIds: data.orderIds,
+      note: data.note,
+    }),
+  )
 }

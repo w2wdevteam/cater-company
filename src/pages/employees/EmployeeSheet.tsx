@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { useCreateEmployee, useUpdateEmployee } from '@/hooks/useEmployees'
-import { mockDepartments } from '@/services/employees.service'
+import { useDepartmentOptions } from '@/hooks/useDepartments'
 import { getLocations } from '@/services/locations.service'
 import type { Employee } from '@/types/employee.types'
 
@@ -43,6 +43,7 @@ export default function EmployeeSheet({
     queryKey: ['locations'],
     queryFn: getLocations,
   })
+  const departments = useDepartmentOptions()
   const createMutation = useCreateEmployee()
   const updateMutation = useUpdateEmployee()
   const mutation = isEdit ? updateMutation : createMutation
@@ -197,7 +198,7 @@ export default function EmployeeSheet({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="_none">No department</SelectItem>
-                          {mockDepartments.map((d) => (
+                          {departments.map((d) => (
                             <SelectItem key={d.id} value={d.id}>
                               {d.name}
                             </SelectItem>

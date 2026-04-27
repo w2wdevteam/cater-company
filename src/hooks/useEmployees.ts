@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import {
   getEmployees,
   createEmployee,
@@ -8,6 +9,7 @@ import {
 } from '@/services/employees.service'
 import type { EmployeeFilters, EmployeeFormData, EmployeeImportRow } from '@/types/employee.types'
 import type { EmployeeStatus } from '@/lib/constants'
+import { getApiErrorMessage } from '@/lib/api-errors'
 
 export function useEmployees(filters: EmployeeFilters) {
   return useQuery({
@@ -21,6 +23,7 @@ export function useCreateEmployee() {
   return useMutation({
     mutationFn: (data: EmployeeFormData) => createEmployee(data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
+    onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to create employee')),
   })
 }
 
@@ -30,6 +33,7 @@ export function useUpdateEmployee() {
     mutationFn: ({ id, data }: { id: string; data: EmployeeFormData }) =>
       updateEmployee(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
+    onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to update employee')),
   })
 }
 
@@ -39,6 +43,7 @@ export function useUpdateEmployeeStatus() {
     mutationFn: ({ id, status }: { id: string; status: EmployeeStatus }) =>
       updateEmployeeStatus(id, status),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
+    onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to update employee status')),
   })
 }
 
@@ -47,5 +52,6 @@ export function useImportEmployees() {
   return useMutation({
     mutationFn: (rows: EmployeeImportRow[]) => importEmployees(rows),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
+    onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to import employees')),
   })
 }

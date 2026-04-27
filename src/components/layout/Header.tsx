@@ -1,8 +1,40 @@
 import { useLocation } from 'react-router-dom'
-import { ChevronRight, LogOut, User } from 'lucide-react'
+import { ChevronRight, LogOut, Truck, User } from 'lucide-react'
 import { useState } from 'react'
 import { useAuthStore } from '@/store/auth.store'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { DELIVERY_STATUSES, type DeliveryStatus } from '@/lib/constants'
+import { useDeliveryStatus } from '@/hooks/useDeliveryStatus'
+
+const deliveryStatusStyles: Record<DeliveryStatus, string> = {
+  idle: 'bg-gray-100 text-gray-600',
+  on_the_way: 'bg-amber-100 text-amber-700 animate-pulse-slow',
+  arrived: 'bg-status-arrived-bg text-status-arrived-text',
+  delivered: 'bg-status-new-bg text-status-new-text',
+}
+
+function DeliveryStatusBadge() {
+  const { data, isLoading } = useDeliveryStatus()
+
+  if (isLoading) {
+    return <div className="h-6 w-24 animate-pulse rounded-full bg-gray-200" />
+  }
+
+  const status = data?.status ?? 'idle'
+
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium',
+        deliveryStatusStyles[status],
+      )}
+    >
+      <Truck className="h-3.5 w-3.5" />
+      {DELIVERY_STATUSES[status]}
+    </span>
+  )
+}
 
 const routeLabels: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -77,7 +109,9 @@ export default function Header() {
       </nav>
 
       {/* Right side */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        <DeliveryStatusBadge />
+
         {/* User menu */}
         <div className="relative">
           <Button
@@ -90,7 +124,7 @@ export default function Header() {
               <User className="h-4 w-4" />
             </div>
             <span className="hidden text-sm font-medium text-gray-700 sm:inline-block">
-              {user?.name ?? 'Admin'}
+              {user?.fullName ?? 'Admin'}
             </span>
           </Button>
 
@@ -103,7 +137,7 @@ export default function Header() {
               <div className="absolute right-0 top-full z-50 mt-1 w-48 rounded-lg border bg-white py-1 shadow-lg">
                 <div className="border-b px-3 py-2">
                   <p className="text-sm font-medium text-gray-900">
-                    {user?.name}
+                    {user?.fullName}
                   </p>
                   <p className="text-xs text-gray-500">{user?.phone}</p>
                 </div>
