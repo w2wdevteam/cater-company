@@ -1,51 +1,56 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ChevronDown, ChevronRight } from 'lucide-react'
+import { format, parse } from 'date-fns'
 import PageHeader from '@/components/common/PageHeader'
-import ExportButtons from '@/components/common/ExportButtons'
 import ErrorBanner from '@/components/common/ErrorBanner'
+import { MonthPicker } from '@/components/ui/date-picker'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { useDepartmentOptions } from '@/hooks/useDepartments'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { formatCurrency } from '@/lib/utils'
-import { MonthPicker } from '@/components/ui/date-picker'
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { getMonthlyReport } from '@/services/reports.service'
-import { useDepartmentOptions } from '@/hooks/useDepartments'
-import type { MonthlyReportRow } from '@/types/report.types'
 
 export default function MonthlyReportPage() {
   usePageTitle('Monthly Report')
 
-  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7))
+  const [month, setMonth] = useState(() => format(new Date(), 'yyyy-MM'))
   const [department, setDepartment] = useState('')
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const departments = useDepartmentOptions()
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  useEffect(() => {
+    document.title = 'Monthly Report — Company Admin'
+  }, [])
+
+  const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['report', 'monthly', month, department],
-    queryFn: () => getMonthlyReport({ month, department: department || undefined }),
+    queryFn: () =>
+      getMonthlyReport({ month, department: department || undefined }),
   })
 
-  function toggleExpand(key: string) {
-    setExpanded((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  }
+  const { grandTotal, grandQty } = useMemo(() => {
+    let gt = 0
+    let q = 0
+    for (const r of rows) {
+      gt += r.totalCost
+      q += r.orderCount
+    }
+    return { grandTotal: gt, grandQty: q }
+  }, [rows])
 
-  const totalOrders = data?.reduce((s, r) => s + r.orderCount, 0) ?? 0
-  const totalCost = data?.reduce((s, r) => s + r.totalCost, 0) ?? 0
+  const monthLabel = format(parse(month + '-01', 'yyyy-MM-dd', new Date()), 'MMMM yyyy')
 
   return (
     <>
-      <PageHeader title="Monthly Report" actions={<ExportButtons />} />
+      <PageHeader title="Monthly Report" />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <MonthPicker
-          value={month}
-          onChange={(v) => { setMonth(v); setExpanded(new Set()) }}
-        />
+        <MonthPicker value={month} onChange={setMonth} />
         <Select
           value={department || '_all'}
           onValueChange={(v) => setDepartment(v === '_all' ? '' : v)}
@@ -56,7 +61,9 @@ export default function MonthlyReportPage() {
           <SelectContent>
             <SelectItem value="_all">All Departments</SelectItem>
             {departments.map((d) => (
-              <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+              <SelectItem key={d.id} value={d.id}>
+                {d.name}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -65,73 +72,135 @@ export default function MonthlyReportPage() {
       {isError ? (
         <ErrorBanner message="Failed to load monthly report." onRetry={refetch} />
       ) : (
-        <div className="overflow-hidden rounded-md border">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-gray-50">
-                <th className="w-10 px-4 py-2.5" />
-                <th className="px-4 py-2.5 text-left font-medium text-gray-600">Employee</th>
-                <th className="px-4 py-2.5 text-left font-medium text-gray-600">Department</th>
-                <th className="px-4 py-2.5 text-right font-medium text-gray-600">Orders</th>
-                <th className="px-4 py-2.5 text-right font-medium text-gray-600">Total Cost</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                Array.from({ length: 4 }).map((_, i) => (
-                  <tr key={i} className="border-b">
-                    <td colSpan={5} className="px-4 py-3">
-                      <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200" />
+        <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b px-6 py-3">
+            <h3 className="text-sm font-semibold text-gray-900">{monthLabel}</h3>
+            <div className="text-xs text-gray-500">
+              {rows.length} employee{rows.length === 1 ? '' : 's'} · {grandQty} order
+              {grandQty === 1 ? '' : 's'}
+            </div>
+          </div>
+
+          {isLoading ? (
+            <div className="space-y-3 px-6 py-6">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-4 animate-pulse rounded bg-gray-100"
+                  style={{ width: `${90 - i * 8}%` }}
+                />
+              ))}
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="py-16 text-center">
+              <p className="text-sm text-gray-500">No orders for this period.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-sm">
+                <thead>
+                  <tr className="border-b bg-gray-50 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    <th className="border-r px-4 py-3">Employee</th>
+                    <th className="border-r px-4 py-3">Department</th>
+                    <th className="border-r px-4 py-3">Menu Item</th>
+                    <th className="border-r px-4 py-3 text-right">Qty</th>
+                    <th className="border-r px-4 py-3 text-right">Unit Price</th>
+                    <th className="px-4 py-3 text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => {
+                    const items = row.menuItems
+                    const span = Math.max(items.length, 1)
+                    if (items.length === 0) {
+                      // Defensive: backend should not emit an employee with zero
+                      // breakdown rows, but if it does, show a single placeholder
+                      // row so the rowSpan layout doesn't collapse.
+                      return (
+                        <tr key={row.employeeId} className="hover:bg-gray-50/60">
+                          <td className="border-b border-r px-4 py-3 font-medium text-gray-900">
+                            {row.employeeName}
+                          </td>
+                          <td className="border-b border-r px-4 py-3 text-gray-700">
+                            {row.departmentName}
+                          </td>
+                          <td className="border-b border-r px-4 py-3 text-gray-400" colSpan={3}>
+                            No items
+                          </td>
+                          <td className="border-b px-4 py-3 text-right font-semibold text-gray-900">
+                            {formatCurrency(row.totalCost)}
+                          </td>
+                        </tr>
+                      )
+                    }
+                    return items.map((item, idx) => {
+                      const isFirst = idx === 0
+                      const isLast = idx === span - 1
+                      const rowBorder = isLast ? 'border-b' : ''
+                      return (
+                        <tr
+                          key={`${row.employeeId}-${item.menuItemId}`}
+                          className="hover:bg-gray-50/60"
+                        >
+                          {isFirst && (
+                            <td
+                              rowSpan={span}
+                              className="border-b border-r align-top px-4 py-3 font-medium text-gray-900"
+                            >
+                              {row.employeeName}
+                            </td>
+                          )}
+                          {isFirst && (
+                            <td
+                              rowSpan={span}
+                              className="border-b border-r align-top px-4 py-3 text-gray-700"
+                            >
+                              {row.departmentName}
+                            </td>
+                          )}
+                          <td className={`border-r px-4 py-3 text-gray-700 ${rowBorder}`}>
+                            {item.menuItemName}
+                          </td>
+                          <td
+                            className={`border-r px-4 py-3 text-right text-gray-700 ${rowBorder}`}
+                          >
+                            {item.quantity}
+                          </td>
+                          <td
+                            className={`border-r px-4 py-3 text-right text-gray-700 ${rowBorder}`}
+                          >
+                            {formatCurrency(item.unitPrice)}
+                          </td>
+                          {isFirst && (
+                            <td
+                              rowSpan={span}
+                              className="border-b align-top px-4 py-3 text-right font-semibold text-gray-900"
+                            >
+                              {formatCurrency(row.totalCost)}
+                            </td>
+                          )}
+                        </tr>
+                      )
+                    })
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-gray-50 font-semibold">
+                    <td className="px-4 py-3 text-gray-900" colSpan={3}>
+                      Total owed to catering
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-900">{grandQty}</td>
+                    <td className="px-4 py-3" />
+                    <td className="px-4 py-3 text-right text-gray-900">
+                      {formatCurrency(grandTotal)}
                     </td>
                   </tr>
-                ))
-              ) : (
-                <>
-                  {data?.map((row) => (
-                    <EmployeeRows
-                      key={row.employeeName}
-                      row={row}
-                      isOpen={expanded.has(row.employeeName)}
-                      onToggle={() => toggleExpand(row.employeeName)}
-                    />
-                  ))}
-                  <tr className="border-t-2 bg-gray-50 font-semibold">
-                    <td className="px-4 py-2.5" />
-                    <td className="px-4 py-2.5 text-gray-900">Total</td>
-                    <td className="px-4 py-2.5" />
-                    <td className="px-4 py-2.5 text-right text-gray-900">{totalOrders}</td>
-                    <td className="px-4 py-2.5 text-right text-gray-900">{formatCurrency(totalCost)}</td>
-                  </tr>
-                </>
-              )}
-            </tbody>
-          </table>
+                </tfoot>
+              </table>
+            </div>
+          )}
         </div>
       )}
-    </>
-  )
-}
-
-function EmployeeRows({ row, isOpen, onToggle }: { row: MonthlyReportRow; isOpen: boolean; onToggle: () => void }) {
-  return (
-    <>
-      <tr className="border-b cursor-pointer hover:bg-gray-50" onClick={onToggle}>
-        <td className="px-4 py-2.5 text-gray-400">
-          {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </td>
-        <td className="px-4 py-2.5 font-medium text-gray-900">{row.employeeName}</td>
-        <td className="px-4 py-2.5 text-gray-600">{row.departmentName}</td>
-        <td className="px-4 py-2.5 text-right text-gray-700">{row.orderCount}</td>
-        <td className="px-4 py-2.5 text-right text-gray-700">{formatCurrency(row.totalCost)}</td>
-      </tr>
-      {isOpen && row.menuItems.map((item) => (
-        <tr key={item.menuItemName} className="border-b bg-gray-100">
-          <td className="px-4 py-2" />
-          <td className="px-4 py-2 pl-10 text-gray-700" colSpan={2}>{item.menuItemName}</td>
-          <td className="px-4 py-2 text-right text-gray-600">{item.orderCount}</td>
-          <td className="px-4 py-2" />
-        </tr>
-      ))}
     </>
   )
 }

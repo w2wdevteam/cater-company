@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import PageHeader from '@/components/common/PageHeader'
-import ExportButtons from '@/components/common/ExportButtons'
 import ErrorBanner from '@/components/common/ErrorBanner'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { REQUEST_STATUSES } from '@/lib/constants'
@@ -32,7 +31,7 @@ export default function NotDeliveredSummaryPage() {
 
   return (
     <>
-      <PageHeader title="Not Delivered Summary" actions={<ExportButtons />} />
+      <PageHeader title="Not Delivered Summary" />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <DatePicker value={from} onChange={(v) => setFrom(v)} placeholder="From date" />

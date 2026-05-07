@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import PageHeader from '@/components/common/PageHeader'
-import ExportButtons from '@/components/common/ExportButtons'
 import ErrorBanner from '@/components/common/ErrorBanner'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { formatDate, formatDateTime } from '@/lib/utils'
@@ -21,7 +20,7 @@ export default function CancellationLogPage() {
 
   return (
     <>
-      <PageHeader title="Cancellation Log" actions={<ExportButtons />} />
+      <PageHeader title="Cancellation Log" />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <DatePicker value={from} onChange={(v) => setFrom(v)} placeholder="From date" />

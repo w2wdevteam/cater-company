@@ -19,12 +19,22 @@ export interface WeeklyReportRow {
   totalCost: number
 }
 
+export interface MonthlyReportMenuLine {
+  menuItemId: string
+  menuItemName: string
+  quantity: number
+  unitPrice: number
+  subtotal: number
+}
+
 export interface MonthlyReportRow {
+  employeeId: string
   employeeName: string
+  departmentId: string | null
   departmentName: string
   orderCount: number
   totalCost: number
-  menuItems: DailyReportMenuBreakdown[]
+  menuItems: MonthlyReportMenuLine[]
 }
 
 export interface YtdRow {

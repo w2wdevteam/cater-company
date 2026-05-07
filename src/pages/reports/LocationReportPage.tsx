@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import PageHeader from '@/components/common/PageHeader'
-import ExportButtons from '@/components/common/ExportButtons'
 import { getLocationReport } from '@/services/reports.service'
 import { DatePicker } from '@/components/ui/date-picker'
 
@@ -16,7 +15,7 @@ export default function LocationReportPage() {
 
   return (
     <>
-      <PageHeader title="Location-based Order Report" actions={<ExportButtons />} />
+      <PageHeader title="Location-based Order Report" />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <DatePicker value={from} onChange={(v) => setFrom(v)} placeholder="From date" />

@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import PageHeader from '@/components/common/PageHeader'
-import ExportButtons from '@/components/common/ExportButtons'
 import ErrorBanner from '@/components/common/ErrorBanner'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { formatCurrency } from '@/lib/utils'
@@ -16,7 +15,7 @@ export default function YtdReportPage() {
 
   return (
     <>
-      <PageHeader title="Year-to-Date Summary" actions={<ExportButtons />} />
+      <PageHeader title="Year-to-Date Summary" />
 
       {isError ? (
         <ErrorBanner message="Failed to load year-to-date report." onRetry={refetch} />

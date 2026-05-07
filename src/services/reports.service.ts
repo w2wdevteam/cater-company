@@ -88,13 +88,18 @@ export async function getMonthlyReport(params?: {
       params?.department && params.department !== 'all' ? params.department : undefined,
   })
   return res.employees.map((e) => ({
+    employeeId: e.employeeId,
     employeeName: e.employeeName,
+    departmentId: e.departmentId,
     departmentName: e.departmentName ?? '—',
     orderCount: e.orderCount,
     totalCost: e.totalCost,
     menuItems: e.menuBreakdown.map((m) => ({
+      menuItemId: m.menuItemId,
       menuItemName: m.menuItemName,
-      orderCount: m.quantity,
+      quantity: m.quantity,
+      unitPrice: m.unitPrice,
+      subtotal: m.subtotal,
     })),
   }))
 }

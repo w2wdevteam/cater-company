@@ -85,11 +85,14 @@ export interface ApiWeeklyReportResponse {
 }
 
 export interface ApiMonthlyEmployeeRow {
+  employeeId: string
   employeeName: string
+  departmentId: string | null
   departmentName: string | null
   orderCount: number
   totalCost: number
   menuBreakdown: Array<{
+    menuItemId: string
     menuItemName: string
     quantity: number
     unitPrice: number

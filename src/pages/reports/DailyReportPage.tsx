@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown, ChevronRight, Building2, UtensilsCrossed, MapPin } from 'lucide-react'
 import PageHeader from '@/components/common/PageHeader'
-import ExportButtons from '@/components/common/ExportButtons'
 import ErrorBanner from '@/components/common/ErrorBanner'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { cn } from '@/lib/utils'
@@ -73,7 +72,7 @@ export default function DailyReportPage() {
 
   return (
     <>
-      <PageHeader title="Daily Report" actions={<ExportButtons />} />
+      <PageHeader title="Daily Report" />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <DatePicker
