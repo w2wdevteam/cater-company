@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import LocationPicker from '@/components/common/LocationPicker'
+import { cn } from '@/lib/utils'
 import type { Location } from '@/types/common.types'
 
 const schema = z.object({
@@ -15,6 +16,7 @@ const schema = z.object({
   address: z.string().min(1, 'Address is required'),
   lat: z.number().optional(),
   lng: z.number().optional(),
+  isHeadquarter: z.boolean().optional(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -45,7 +47,7 @@ export default function LocationSheet({
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', address: '', lat: undefined, lng: undefined },
+    defaultValues: { name: '', address: '', lat: undefined, lng: undefined, isHeadquarter: false },
   })
 
   const currentLat = watch('lat')
@@ -58,9 +60,10 @@ export default function LocationSheet({
         address: location.address,
         lat: location.lat,
         lng: location.lng,
+        isHeadquarter: location.isHeadquarter,
       })
     } else if (open) {
-      reset({ name: '', address: '', lat: undefined, lng: undefined })
+      reset({ name: '', address: '', lat: undefined, lng: undefined, isHeadquarter: false })
     }
   }, [open, location, reset])
 
@@ -128,6 +131,37 @@ export default function LocationSheet({
                     <p className="mt-1 text-xs text-red-500">{errors.address.message}</p>
                   )}
                 </div>
+
+                {(() => {
+                  const isCurrentHq = isEdit && !!location?.isHeadquarter
+                  return (
+                    <label
+                      htmlFor="loc-hq"
+                      className={cn(
+                        'flex items-start gap-2.5 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5',
+                        isCurrentHq ? 'cursor-default' : 'cursor-pointer hover:bg-gray-100',
+                      )}
+                    >
+                      <input
+                        id="loc-hq"
+                        type="checkbox"
+                        {...register('isHeadquarter')}
+                        disabled={isCurrentHq}
+                        className="mt-0.5 h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500 disabled:cursor-default disabled:opacity-70"
+                      />
+                      <span className="text-sm">
+                        <span className="font-medium text-gray-900">
+                          {isCurrentHq ? 'Current company headquarter' : 'Set as company headquarter'}
+                        </span>
+                        <span className="mt-0.5 block text-xs text-gray-500">
+                          {isCurrentHq
+                            ? 'To change the headquarter, edit another location and set it as HQ.'
+                            : 'This becomes the default delivery location for employees who have no personal or department location set.'}
+                        </span>
+                      </span>
+                    </label>
+                  )
+                })()}
               </div>
 
               <div className="flex items-center justify-end gap-3 border-t px-6 py-4">

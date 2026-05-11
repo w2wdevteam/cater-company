@@ -19,7 +19,7 @@ const CREATE_NEW = '__create_new__'
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required'),
-  location: z.string().optional(),
+  locationId: z.string().uuid('Location is required'),
   contactPerson: z.string().optional(),
   buildingNotes: z.string().optional(),
 })
@@ -57,7 +57,7 @@ export default function DepartmentSheet({
       qc.invalidateQueries({ queryKey: ['locations'] })
       toast.success('Location created')
       setLocationSheetOpen(false)
-      setValue('location', newLoc.name)
+      setValue('locationId', newLoc.id, { shouldValidate: true })
     },
     onError: (err) => toast.error(getApiErrorMessage(err, 'Failed to create location')),
   })
@@ -71,29 +71,21 @@ export default function DepartmentSheet({
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: '', location: '', contactPerson: '', buildingNotes: '' },
+    defaultValues: { name: '', locationId: '', contactPerson: '', buildingNotes: '' },
   })
 
   useEffect(() => {
     if (open && department) {
       reset({
         name: department.name,
-        location: department.location ?? '',
+        locationId: department.locationId ?? '',
         contactPerson: department.contactPerson ?? '',
         buildingNotes: department.buildingNotes ?? '',
       })
     } else if (open) {
-      reset({ name: '', location: '', contactPerson: '', buildingNotes: '' })
+      reset({ name: '', locationId: '', contactPerson: '', buildingNotes: '' })
     }
   }, [open, department, reset])
-
-  function handleSelectChange(value: string) {
-    if (value === CREATE_NEW) {
-      setLocationSheetOpen(true)
-    } else {
-      setValue('location', value)
-    }
-  }
 
   return (
     <>
@@ -121,28 +113,27 @@ export default function DepartmentSheet({
                     {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
                   </div>
                   <div>
-                    <Label htmlFor="dept-location">Location</Label>
+                    <Label htmlFor="dept-location">Location *</Label>
                     <Controller
-                      name="location"
+                      name="locationId"
                       control={control}
                       render={({ field }) => (
                         <Select
-                          value={field.value || '_none'}
+                          value={field.value || undefined}
                           onValueChange={(val) => {
                             if (val === CREATE_NEW) {
-                              handleSelectChange(val)
+                              setLocationSheetOpen(true)
                             } else {
-                              field.onChange(val === '_none' ? '' : val)
+                              field.onChange(val)
                             }
                           }}
                         >
                           <SelectTrigger className="mt-1.5">
-                            <SelectValue />
+                            <SelectValue placeholder="Select a location" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="_none">No location</SelectItem>
                             {locations?.map((loc) => (
-                              <SelectItem key={loc.id} value={loc.name}>
+                              <SelectItem key={loc.id} value={loc.id}>
                                 {loc.name}
                               </SelectItem>
                             ))}
@@ -152,6 +143,9 @@ export default function DepartmentSheet({
                         </Select>
                       )}
                     />
+                    {errors.locationId && (
+                      <p className="mt-1 text-xs text-red-500">{errors.locationId.message}</p>
+                    )}
                   </div>
                   <div>
                     <Label htmlFor="dept-contact">Contact Person</Label>

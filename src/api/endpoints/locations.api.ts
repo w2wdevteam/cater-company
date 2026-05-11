@@ -13,6 +13,7 @@ export interface ApiLocation {
   notes: string | null
   companyId: string
   status: ApiEntityStatus
+  isHeadquarter: boolean
   createdAt: string
   updatedAt: string
 }
@@ -32,6 +33,7 @@ export interface CreateLocationBody {
   contactPerson?: string
   notes?: string
   companyId: string
+  isHeadquarter?: boolean
 }
 
 export type UpdateLocationBody = Partial<Omit<CreateLocationBody, 'companyId'>>

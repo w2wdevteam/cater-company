@@ -75,9 +75,9 @@ export default function DepartmentsPage() {
   }
 
   function handleSubmit(values: DepartmentFormData) {
-    const cleaned = {
-      ...values,
-      location: values.location || undefined,
+    const cleaned: DepartmentFormData = {
+      name: values.name,
+      locationId: values.locationId,
       contactPerson: values.contactPerson || undefined,
       buildingNotes: values.buildingNotes || undefined,
     }

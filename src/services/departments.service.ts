@@ -6,6 +6,7 @@ function mapDepartment(d: ApiDepartment): Department {
   return {
     id: d.id,
     name: d.name,
+    locationId: d.locationId,
     location: d.locationName ?? undefined,
     contactPerson: d.contactPerson ?? undefined,
     buildingNotes: d.buildingNotes ?? undefined,
@@ -24,21 +25,14 @@ export async function getDepartments(): Promise<Department[]> {
   return result.data.map(mapDepartment)
 }
 
-/**
- * The backend requires a `locationId` (UUID) when creating a department — the UI
- * still collects a free-text `location` label. When `location` is not a UUID the
- * backend will reject the request; pages that use this should be updated to
- * choose a location from the lookup endpoint.
- */
 export async function createDepartment(data: DepartmentFormData): Promise<Department> {
   const companyId = getCompanyId()
-  const locationId = data.location ?? ''
   const created = await departmentsApi.create({
     name: data.name,
     contactPerson: data.contactPerson || undefined,
     buildingNotes: data.buildingNotes || undefined,
     companyId,
-    locationId,
+    locationId: data.locationId,
   })
   return mapDepartment(created)
 }
@@ -51,7 +45,7 @@ export async function updateDepartment(
     name: data.name,
     contactPerson: data.contactPerson || undefined,
     buildingNotes: data.buildingNotes || undefined,
-    locationId: data.location || undefined,
+    locationId: data.locationId,
   })
   return mapDepartment(updated)
 }

@@ -9,6 +9,7 @@ function mapLocation(l: ApiLocation): Location {
     address: l.address,
     lat: l.lat ?? undefined,
     lng: l.lng ?? undefined,
+    isHeadquarter: l.isHeadquarter,
   }
 }
 
@@ -30,6 +31,7 @@ export async function createLocation(data: LocationFormData): Promise<Location> 
     lat: data.lat,
     lng: data.lng,
     companyId: getCompanyId(),
+    isHeadquarter: data.isHeadquarter,
   })
   return mapLocation(created)
 }
@@ -40,6 +42,7 @@ export async function updateLocation(id: string, data: LocationFormData): Promis
     address: data.address,
     lat: data.lat,
     lng: data.lng,
+    isHeadquarter: data.isHeadquarter,
   })
   return mapLocation(updated)
 }

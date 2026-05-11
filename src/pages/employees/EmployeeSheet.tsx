@@ -22,7 +22,7 @@ const employeeSchema = z.object({
   employeeId: z.string().optional(),
   departmentId: z.string().optional(),
   role: z.string().optional(),
-  location: z.string().optional(),
+  locationId: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof employeeSchema>
@@ -63,7 +63,7 @@ export default function EmployeeSheet({
       employeeId: '',
       departmentId: '',
       role: '',
-      location: '',
+      locationId: '',
     },
   })
 
@@ -76,10 +76,10 @@ export default function EmployeeSheet({
         employeeId: employee.employeeId ?? '',
         departmentId: employee.departmentId ?? '',
         role: employee.role ?? '',
-        location: employee.location ?? '',
+        locationId: employee.locationId ?? '',
       })
     } else if (open) {
-      reset({ name: '', phone: '', email: '', employeeId: '', departmentId: '', role: '', location: '' })
+      reset({ name: '', phone: '', email: '', employeeId: '', departmentId: '', role: '', locationId: '' })
     }
   }, [open, employee, reset])
 
@@ -90,7 +90,7 @@ export default function EmployeeSheet({
       employeeId: values.employeeId || undefined,
       departmentId: values.departmentId || undefined,
       role: values.role || undefined,
-      location: values.location || undefined,
+      locationId: values.locationId || undefined,
     }
 
     if (isEdit) {
@@ -212,7 +212,7 @@ export default function EmployeeSheet({
                 <div>
                   <Label>Location</Label>
                   <Controller
-                    name="location"
+                    name="locationId"
                     control={control}
                     render={({ field }) => (
                       <Select
@@ -225,7 +225,7 @@ export default function EmployeeSheet({
                         <SelectContent>
                           <SelectItem value="_none">No location</SelectItem>
                           {locations?.map((loc) => (
-                            <SelectItem key={loc.id} value={loc.name}>
+                            <SelectItem key={loc.id} value={loc.id}>
                               {loc.name}
                             </SelectItem>
                           ))}

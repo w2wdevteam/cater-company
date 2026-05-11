@@ -9,6 +9,7 @@ export interface Employee {
   departmentId?: string
   departmentName?: string
   role?: string
+  locationId?: string
   location?: string
   status: EmployeeStatus
   createdAt: string
@@ -22,7 +23,7 @@ export interface EmployeeFormData {
   employeeId?: string
   departmentId?: string
   role?: string
-  location?: string
+  locationId?: string
 }
 
 export interface EmployeeFilters {

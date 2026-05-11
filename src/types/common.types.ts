@@ -1,6 +1,7 @@
 export interface Department {
   id: string
   name: string
+  locationId?: string
   location?: string
   contactPerson?: string
   buildingNotes?: string
@@ -9,7 +10,7 @@ export interface Department {
 
 export interface DepartmentFormData {
   name: string
-  location?: string
+  locationId: string
   contactPerson?: string
   buildingNotes?: string
 }
@@ -20,6 +21,7 @@ export interface Location {
   address: string
   lat?: number
   lng?: number
+  isHeadquarter: boolean
 }
 
 export interface LocationFormData {
@@ -27,4 +29,5 @@ export interface LocationFormData {
   address: string
   lat?: number
   lng?: number
+  isHeadquarter?: boolean
 }

@@ -23,6 +23,7 @@ function mapEmployee(e: ApiEmployee): Employee {
     departmentId: e.departmentId ?? undefined,
     departmentName: e.departmentName ?? undefined,
     role: e.role ?? undefined,
+    locationId: e.locationId ?? undefined,
     location: e.locationName ?? undefined,
     status: e.status as EmployeeStatus,
     createdAt: e.createdAt,
@@ -38,6 +39,10 @@ function toCreateBody(data: EmployeeFormData): CreateEmployeeBody {
     employeeId: data.employeeId || undefined,
     role: data.role || undefined,
     departmentId: data.departmentId || undefined,
+    // Explicit null clears the location on edit; undefined would let the
+    // backend keep the existing value (NestJS PartialType + service treats
+    // `undefined` as "no change", `null` as "clear").
+    locationId: data.locationId ? data.locationId : null,
   }
 }
 

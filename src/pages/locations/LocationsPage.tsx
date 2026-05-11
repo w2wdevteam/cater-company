@@ -87,7 +87,14 @@ export default function LocationsPage() {
       accessorKey: 'name',
       header: 'Location Name',
       cell: ({ row }) => (
-        <span className="font-medium text-gray-900">{row.original.name}</span>
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-gray-900">{row.original.name}</span>
+          {row.original.isHeadquarter && (
+            <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+              HQ
+            </span>
+          )}
+        </div>
       ),
     },
     { accessorKey: 'address', header: 'Address' },
